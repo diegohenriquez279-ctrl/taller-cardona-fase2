@@ -1,0 +1,73 @@
+@model List<OrdenTrabajo>
+@{
+    ViewData["Title"] = "Tablero de órdenes";
+    var todosLosEstados = Enum.GetValues<EstadoOrden>();
+    var primero = todosLosEstados.First();
+    var ultimo = todosLosEstados.Last();
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0">Tablero de órdenes</h1>
+    <div>
+        <a asp-action="Index" class="btn btn-outline-secondary">Ver listado</a>
+        <a asp-action="Create" class="btn btn-primary">Nueva orden</a>
+    </div>
+</div>
+
+@if (TempData["Mensaje"] is string mensaje)
+{
+    <div class="alert alert-success">@mensaje</div>
+}
+
+<div class="row row-cols-1 row-cols-md-5 g-2">
+    @foreach (var estado in todosLosEstados)
+    {
+        var ordenes = Model.Where(o => o.Estado == estado).OrderBy(o => o.FechaIngreso).ToList();
+        <div class="col">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="badge @estado.ClaseBadge()">@estado.Nombre()</span>
+                <span class="text-muted small">@ordenes.Count</span>
+            </div>
+
+            @if (!ordenes.Any())
+            {
+                <p class="text-muted small">Sin órdenes.</p>
+            }
+
+            @foreach (var o in ordenes)
+            {
+                <div class="card mb-2">
+                    <div class="card-body p-2">
+                        <div class="d-flex justify-content-between">
+                            <strong>#@o.Id</strong>
+                            <span class="text-muted small">@o.FechaIngreso.ToString("dd/MM/yyyy")</span>
+                        </div>
+                        <div>@(o.Vehiculo is null ? "—" : $"{o.Vehiculo.Placa} · {o.Vehiculo.Marca} {o.Vehiculo.Modelo}")</div>
+                        <div class="text-muted small">@(o.Vehiculo?.Cliente?.Nombre ?? "—")</div>
+                        <p class="small mt-1 mb-2">@o.ProblemaReportado</p>
+
+                        <div class="d-flex justify-content-between align-items-center">
+                            <a asp-action="Details" asp-route-id="@o.Id" class="btn btn-sm btn-outline-secondary">Ver</a>
+                            <div class="d-flex gap-1">
+                                @if (estado != primero)
+                                {
+                                    <form asp-action="CambiarEstado" asp-route-id="@o.Id" method="post">
+                                        <input type="hidden" name="estado" value="@((EstadoOrden)((int)estado - 1))" />
+                                        <button type="submit" class="btn btn-sm btn-outline-primary" title="Mover a la etapa anterior">&larr;</button>
+                                    </form>
+                                }
+                                @if (estado != ultimo)
+                                {
+                                    <form asp-action="CambiarEstado" asp-route-id="@o.Id" method="post">
+                                        <input type="hidden" name="estado" value="@((EstadoOrden)((int)estado + 1))" />
+                                        <button type="submit" class="btn btn-sm btn-primary" title="Mover a la siguiente etapa">&rarr;</button>
+                                    </form>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>

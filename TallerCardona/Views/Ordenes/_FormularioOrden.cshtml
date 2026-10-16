@@ -1,0 +1,52 @@
+@using Microsoft.AspNetCore.Mvc.Rendering
+@model OrdenTrabajo
+@{
+    var vehiculos = (SelectList)ViewData["Vehiculos"]!;
+    var estados = (List<SelectListItem>)ViewData["Estados"]!;
+}
+<div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+<input type="hidden" asp-for="Id" />
+
+<div class="mb-3">
+    <label asp-for="VehiculoId" class="form-label">Vehículo</label>
+    <select asp-for="VehiculoId" class="form-select" asp-items="vehiculos">
+        <option value="0">Seleccione un vehículo</option>
+    </select>
+    <span asp-validation-for="VehiculoId" class="text-danger"></span>
+</div>
+
+<div class="mb-3">
+    <label asp-for="FechaIngreso" class="form-label">Fecha de ingreso</label>
+    <input asp-for="FechaIngreso" class="form-control" />
+    <span asp-validation-for="FechaIngreso" class="text-danger"></span>
+</div>
+
+<div class="mb-3">
+    <label asp-for="KilometrajeIngreso" class="form-label">Kilometraje de ingreso</label>
+    <input asp-for="KilometrajeIngreso" class="form-control" />
+    <span asp-validation-for="KilometrajeIngreso" class="text-danger"></span>
+</div>
+
+<div class="mb-3">
+    <label asp-for="ProblemaReportado" class="form-label">Problema reportado</label>
+    <textarea asp-for="ProblemaReportado" class="form-control" rows="3"></textarea>
+    <span asp-validation-for="ProblemaReportado" class="text-danger"></span>
+</div>
+
+<div class="mb-3">
+    <label asp-for="Diagnostico" class="form-label">Diagnóstico</label>
+    <textarea asp-for="Diagnostico" class="form-control" rows="3"></textarea>
+    <span asp-validation-for="Diagnostico" class="text-danger"></span>
+</div>
+
+<div class="mb-3">
+    <label asp-for="Estado" class="form-label">Estado</label>
+    <select asp-for="Estado" class="form-select" asp-items="estados"></select>
+    <span asp-validation-for="Estado" class="text-danger"></span>
+</div>
+
+<div class="mb-3">
+    <label asp-for="Observaciones" class="form-label">Observaciones</label>
+    <textarea asp-for="Observaciones" class="form-control" rows="2"></textarea>
+    <span asp-validation-for="Observaciones" class="text-danger"></span>
+</div>

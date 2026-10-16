@@ -1,0 +1,15 @@
+@model OrdenTrabajo
+@{
+    ViewData["Title"] = "Eliminar orden de trabajo";
+}
+
+<h1 class="h3 mb-3">Eliminar orden de trabajo</h1>
+
+<div class="alert alert-warning">
+    ¿Seguro que desea eliminar la orden <strong>#@Model.Id</strong> (@(Model.Vehiculo?.Placa ?? "sin vehículo"), @Model.Estado.Nombre())? Esta acción no se puede deshacer.
+</div>
+
+<form asp-action="Delete" asp-route-id="@Model.Id" method="post">
+    <button type="submit" class="btn btn-danger">Sí, eliminar</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+</form>

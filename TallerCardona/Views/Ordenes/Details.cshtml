@@ -1,0 +1,99 @@
+@model OrdenTrabajo
+@{
+    ViewData["Title"] = "Detalle de la orden";
+    var todosLosEstados = Enum.GetValues<EstadoOrden>();
+    var totalServicios = Model.Servicios.Sum(s => s.Subtotal);
+    var totalRepuestos = Model.Repuestos.Sum(r => r.Subtotal);
+}
+
+@if (TempData["Mensaje"] is string mensaje)
+{
+    <div class="alert alert-success">@mensaje</div>
+}
+
+<h1 class="h3 mb-3">
+    Orden #@Model.Id
+    <span class="badge @Model.Estado.ClaseBadge() fs-6 align-middle">@Model.Estado.Nombre()</span>
+</h1>
+
+<dl class="row">
+    <dt class="col-sm-3">Vehículo</dt>
+    <dd class="col-sm-9">@(Model.Vehiculo is null ? "—" : $"{Model.Vehiculo.Placa} · {Model.Vehiculo.Marca} {Model.Vehiculo.Modelo} {Model.Vehiculo.Anio}")</dd>
+
+    <dt class="col-sm-3">Cliente</dt>
+    <dd class="col-sm-9">@(Model.Vehiculo?.Cliente?.Nombre ?? "—")</dd>
+
+    <dt class="col-sm-3">Fecha de ingreso</dt>
+    <dd class="col-sm-9">@Model.FechaIngreso.ToString("dd/MM/yyyy HH:mm")</dd>
+
+    <dt class="col-sm-3">Fecha de entrega</dt>
+    <dd class="col-sm-9">@(Model.FechaEntrega?.ToString("dd/MM/yyyy HH:mm") ?? "—")</dd>
+
+    <dt class="col-sm-3">Kilometraje de ingreso</dt>
+    <dd class="col-sm-9">@Model.KilometrajeIngreso.ToString("N0") km</dd>
+
+    <dt class="col-sm-3">Problema reportado</dt>
+    <dd class="col-sm-9">@Model.ProblemaReportado</dd>
+
+    <dt class="col-sm-3">Diagnóstico</dt>
+    <dd class="col-sm-9">@(Model.Diagnostico ?? "—")</dd>
+
+    <dt class="col-sm-3">Observaciones</dt>
+    <dd class="col-sm-9">@(Model.Observaciones ?? "—")</dd>
+
+    <dt class="col-sm-3">Servicios</dt>
+    <dd class="col-sm-9">
+        @if (!Model.Servicios.Any())
+        {
+            <span class="text-muted">Sin servicios registrados.</span>
+        }
+        else
+        {
+            <ul class="mb-0">
+                @foreach (var s in Model.Servicios)
+                {
+                    <li>@s.Cantidad × @(s.Servicio?.Nombre ?? "Servicio") — @s.Subtotal.ToString("C")</li>
+                }
+            </ul>
+        }
+    </dd>
+
+    <dt class="col-sm-3">Repuestos</dt>
+    <dd class="col-sm-9">
+        @if (!Model.Repuestos.Any())
+        {
+            <span class="text-muted">Sin repuestos registrados.</span>
+        }
+        else
+        {
+            <ul class="mb-0">
+                @foreach (var r in Model.Repuestos)
+                {
+                    <li>@r.Cantidad × @(r.Repuesto?.Nombre ?? "Repuesto") — @r.Subtotal.ToString("C")</li>
+                }
+            </ul>
+        }
+    </dd>
+
+    <dt class="col-sm-3">Total</dt>
+    <dd class="col-sm-9">@((totalServicios + totalRepuestos).ToString("C"))</dd>
+</dl>
+
+<form asp-action="CambiarEstado" asp-route-id="@Model.Id" method="post" class="row g-2 mb-3">
+    <input type="hidden" name="volverA" value="Details" />
+    <div class="col-sm-6 col-md-4">
+        <select name="estado" class="form-select">
+            @foreach (var e in todosLosEstados)
+            {
+                <option value="@e" selected="@(e == Model.Estado)">@e.Nombre()</option>
+            }
+        </select>
+    </div>
+    <div class="col-auto">
+        <button type="submit" class="btn btn-outline-primary">Cambiar estado</button>
+    </div>
+</form>
+
+<a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Editar</a>
+<a asp-action="Tablero" class="btn btn-outline-secondary">Ver tablero</a>
+<a asp-action="Index" class="btn btn-secondary">Volver al listado</a>

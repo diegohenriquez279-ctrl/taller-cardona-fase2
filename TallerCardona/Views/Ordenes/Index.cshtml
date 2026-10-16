@@ -1,0 +1,75 @@
+@using Microsoft.AspNetCore.Mvc.Rendering
+@model List<OrdenTrabajo>
+@{
+    ViewData["Title"] = "Órdenes de trabajo";
+    var busqueda = ViewData["Busqueda"] as string;
+    var estados = (List<SelectListItem>)ViewData["Estados"]!;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0">Órdenes de trabajo</h1>
+    <div>
+        <a asp-action="Tablero" class="btn btn-outline-secondary">Ver tablero</a>
+        <a asp-action="Create" class="btn btn-primary">Nueva orden</a>
+    </div>
+</div>
+
+@if (TempData["Mensaje"] is string mensaje)
+{
+    <div class="alert alert-success">@mensaje</div>
+}
+
+<form method="get" asp-action="Index" class="row g-2 mb-3">
+    <div class="col-sm-6 col-md-5">
+        <input type="text" name="busqueda" value="@busqueda" class="form-control"
+               placeholder="Buscar por número, placa, cliente o problema" />
+    </div>
+    <div class="col-sm-4 col-md-3">
+        <select name="estado" class="form-select" asp-items="estados">
+            <option value="">Todos los estados</option>
+        </select>
+    </div>
+    <div class="col-auto">
+        <button type="submit" class="btn btn-outline-secondary">Buscar</button>
+        <a asp-action="Index" class="btn btn-link">Limpiar</a>
+    </div>
+</form>
+
+@if (!Model.Any())
+{
+    <p class="text-muted">No se encontraron órdenes de trabajo.</p>
+}
+else
+{
+    <table class="table table-hover align-middle">
+        <thead>
+            <tr>
+                <th>N.º</th>
+                <th>Ingreso</th>
+                <th>Vehículo</th>
+                <th>Cliente</th>
+                <th>Problema reportado</th>
+                <th>Estado</th>
+                <th class="text-end">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var o in Model)
+            {
+                <tr>
+                    <td>@o.Id</td>
+                    <td>@o.FechaIngreso.ToString("dd/MM/yyyy")</td>
+                    <td>@(o.Vehiculo is null ? "—" : $"{o.Vehiculo.Placa} · {o.Vehiculo.Marca} {o.Vehiculo.Modelo}")</td>
+                    <td>@(o.Vehiculo?.Cliente?.Nombre ?? "—")</td>
+                    <td>@o.ProblemaReportado</td>
+                    <td><span class="badge @o.Estado.ClaseBadge()">@o.Estado.Nombre()</span></td>
+                    <td class="text-end">
+                        <a asp-action="Details" asp-route-id="@o.Id" class="btn btn-sm btn-outline-secondary">Ver</a>
+                        <a asp-action="Edit" asp-route-id="@o.Id" class="btn btn-sm btn-outline-primary">Editar</a>
+                        <a asp-action="Delete" asp-route-id="@o.Id" class="btn btn-sm btn-outline-danger">Eliminar</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
