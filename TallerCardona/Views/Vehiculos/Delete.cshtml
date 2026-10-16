@@ -1,0 +1,20 @@
+@model Vehiculo
+@{
+    ViewData["Title"] = "Eliminar vehículo";
+}
+
+<h1 class="h3">Eliminar vehículo</h1>
+<p>¿Seguro que deseas eliminar <strong>@Model.Marca @Model.Modelo</strong> con placa <strong>@Model.Placa</strong>?</p>
+@if (Model.Ordenes.Count > 0)
+{
+    <div class="alert alert-warning">No se puede eliminar este vehículo porque tiene órdenes de trabajo en su historial.</div>
+    <a asp-action="Index" class="btn btn-secondary">Volver a vehículos</a>
+}
+else
+{
+    <div class="alert alert-warning">Esta acción quitará el vehículo del listado. No podrás recuperar este registro.</div>
+    <form asp-action="Delete" asp-route-id="@Model.Id" method="post">
+        <button type="submit" class="btn btn-danger">Eliminar</button>
+        <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+    </form>
+}
