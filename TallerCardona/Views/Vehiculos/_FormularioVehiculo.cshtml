@@ -1,0 +1,45 @@
+@model Vehiculo
+<input type="hidden" asp-for="Id" />
+<div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+<div class="mb-3">
+    <label asp-for="ClienteId" class="form-label">Cliente propietario</label>
+    <select asp-for="ClienteId" asp-items="ViewBag.Clientes" class="form-select">
+        <option value="0">Seleccione un cliente</option>
+    </select>
+    <span asp-validation-for="ClienteId" class="text-danger"></span>
+</div>
+<div class="mb-3">
+    <label asp-for="Placa" class="form-label">Placa</label>
+    <input asp-for="Placa" class="form-control" placeholder="P123-456" />
+    <span asp-validation-for="Placa" class="text-danger"></span>
+</div>
+<div class="row">
+    <div class="col-md-6 mb-3">
+        <label asp-for="Marca" class="form-label">Marca</label>
+        <input asp-for="Marca" class="form-control" />
+        <span asp-validation-for="Marca" class="text-danger"></span>
+    </div>
+    <div class="col-md-6 mb-3">
+        <label asp-for="Modelo" class="form-label">Modelo</label>
+        <input asp-for="Modelo" class="form-control" />
+        <span asp-validation-for="Modelo" class="text-danger"></span>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-4 mb-3">
+        <label asp-for="Anio" class="form-label">Año</label>
+        <input asp-for="Anio" class="form-control" type="number" />
+        <span asp-validation-for="Anio" class="text-danger"></span>
+    </div>
+    <div class="col-md-4 mb-3">
+        <label asp-for="Color" class="form-label">Color</label>
+        <input asp-for="Color" class="form-control" />
+        <span asp-validation-for="Color" class="text-danger"></span>
+    </div>
+    <div class="col-md-4 mb-3">
+        <label asp-for="Kilometraje" class="form-label">Kilometraje</label>
+        <input asp-for="Kilometraje" class="form-control" type="number" min="0" step="1" />
+        <span asp-validation-for="Kilometraje" class="text-danger"></span>
+    </div>
+</div>
