@@ -1,0 +1,14 @@
+@model Vehiculo
+@{
+    ViewData["Title"] = "Registrar vehículo";
+}
+
+<h1 class="h3 mb-3">Registrar vehículo</h1>
+<form asp-action="Create" method="post">
+    <partial name="_FormularioVehiculo" model="Model" />
+    <button type="submit" class="btn btn-primary">Guardar vehículo</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+</form>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
