@@ -2,11 +2,12 @@
 
 **Proyecto:** Taller Cardona S.A. — DAS901, Fase 2  
 **Módulo:** Vehículos e historial  
-**Rama:** `modulo/vehiculos`
+**Rama:** `modulo/vehiculos`  
+**Prototipo:** [archivo de Figma del grupo](https://www.figma.com/design/Vr8A7l96zkheF8tdUVOI8h) — pantallas Vehículos / Lista, Registrar, Historial y Eliminar bloqueado.
 
 ## 1. Propósito y alcance
 
-El módulo centraliza la ficha de cada vehículo y permite relacionarla con su cliente propietario. El personal puede registrar, buscar, consultar, actualizar y eliminar vehículos, además de revisar el historial de órdenes asociado.
+El módulo centraliza la ficha de cada vehículo y permite relacionarla con su cliente propietario. El personal puede registrar, buscar, consultar, actualizar y eliminar vehículos, además de revisar el historial de órdenes asociado. Cubre los requerimientos RF-02 y RF-04 del Avance 1.
 
 El sistema se utiliza internamente en el taller. Los clientes aportan los datos del vehículo y son sus propietarios; el personal del taller opera el sistema. Proveedores no participan en los flujos de este módulo.
 
@@ -21,7 +22,7 @@ Los actores parten de los usuarios identificados para Taller Cardona en el anál
 | Administración | Usuario interno que mantiene los registros | Corregir datos y conservar información ordenada para la operación del taller |
 | Cliente propietario | Actor externo al sistema | Proporcionar los datos del vehículo y recibir atención vinculada al historial de ese vehículo |
 
-**Fuera del alcance de esta pantalla:** proveedores, control de inventario y gestión de pagos.
+**Fuera del alcance de este módulo:** proveedores, control de inventario y gestión de pagos.
 
 ## 3. Historias de usuario
 
@@ -33,9 +34,13 @@ Los actores parten de los usuarios identificados para Taller Cardona en el anál
 | HU-V04 | Como encargado, quiero consultar el detalle de un vehículo para verificar sus datos antes de atenderlo. | Alta | El detalle muestra placa, marca, modelo, año, color, kilometraje y cliente propietario. |
 | HU-V05 | Como encargado o técnico, quiero consultar el historial de servicios y reparaciones de un vehículo para conocer los trabajos realizados anteriormente. | Alta | Se muestran las órdenes asociadas, priorizando las más recientes. Si no existen órdenes, se informa que el historial está vacío. |
 | HU-V06 | Como encargado, quiero validar los datos al registrar o editar un vehículo para evitar información incompleta o incorrecta. | Alta | Se señalan los campos inválidos, se conservan los datos escritos y no se guarda una placa duplicada. |
-| HU-V07 | Como encargado, quiero eliminar un registro de vehículo ingresado por error para mantener confiada la lista. | Media | Antes de eliminar, el sistema pide confirmación. No permite eliminar un vehículo que tenga órdenes en su historial. |
+| HU-V07 | Como encargado, quiero eliminar un registro de vehículo ingresado por error para mantener confiable la lista. | Media | Antes de eliminar, el sistema pide confirmación. No permite eliminar un vehículo que tenga órdenes en su historial. |
 
 ## 4. Casos de uso
+
+El diagrama muestra qué actor participa en cada caso de uso del módulo; debajo se describe cada uno.
+
+![Diagrama de casos de uso del módulo vehículos e historial](UX_Vehiculos_casos_de_uso.png)
 
 ### CU-V01 — Registrar vehículo
 
@@ -63,7 +68,7 @@ Los actores parten de los usuarios identificados para Taller Cardona en el anál
 - **Actor principal:** encargado del taller.
 - **Precondición:** el vehículo está registrado.
 - **Flujo básico:** localizar vehículo → Eliminar → revisar confirmación → confirmar → volver al listado.
-- **Alternativa:** si el vehículo tiene órdenes en su historial, el sistema bloquea la eliminación para conservar la trazabilidad.
+- **Alternativas:** si el vehículo tiene órdenes en su historial, el sistema bloquea la eliminación para conservar la trazabilidad.
 
 ## 5. Flujos de navegación
 
@@ -85,7 +90,9 @@ Inicio → Vehículos → localizar registro → Eliminar → confirmar. Si tien
 
 ## 6. Mapa de navegación
 
-![Mapa de navegación del módulo de vehículos](mapa_navegacion.jpeg)
+El mapa resume los flujos anteriores. Los rectángulos son pantallas y los rombos son decisiones o validaciones del sistema.
+
+![Mapa de navegación del módulo vehículos e historial](UX_Vehiculos_mapa.png)
 
 ## 7. Reglas y estados de interfaz
 
@@ -97,7 +104,3 @@ Inicio → Vehículos → localizar registro → Eliminar → confirmar. Si tien
 - La eliminación requiere confirmación y se bloquea si existen órdenes relacionadas.
 - Los registros actuales se guardan en memoria y se reinician al detener la aplicación.
 - Los perfiles identifican actores y necesidades; el prototipo no implementa inicio de sesión ni permisos por rol.
-
-## 8. Nota de alineación
-
-Este borrador se basa en la conversación compartida, el README del repositorio y el comportamiento implementado. Revisar la terminología final y el formato contra el documento oficial de evaluación antes de entregar.
