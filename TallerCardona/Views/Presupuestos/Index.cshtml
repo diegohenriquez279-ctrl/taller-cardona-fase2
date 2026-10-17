@@ -1,4 +1,4 @@
-
+@using TallerCardona.Models
 @model IEnumerable<TallerCardona.Models.Presupuesto>
 
 @{
@@ -48,13 +48,38 @@
                             <td>@presupuesto.OrdenTrabajoId</td>
                             <td>@presupuesto.TotalEstimado.ToString("C2")</td>
                             <td>@presupuesto.Estado</td>
-                            <td>
-                                <a asp-action="Details"
-                                   asp-route-id="@presupuesto.Id"
-                                   class="btn btn-sm btn-primary">
-                                    Ver detalles
-                                </a>
-                            </td>
+                            
+<td>
+    <a asp-action="Details"
+       asp-route-id="@presupuesto.Id"
+       class="btn btn-sm btn-primary mb-1">
+        Ver detalles
+    </a>
+
+    @if (presupuesto.Estado == EstadoPresupuesto.Pendiente)
+    {
+        <form asp-action="Autorizar"
+              asp-route-id="@presupuesto.Id"
+              method="post"
+              class="d-inline">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn btn-sm btn-success mb-1">
+                Autorizar
+            </button>
+        </form>
+
+        <form asp-action="Rechazar"
+              asp-route-id="@presupuesto.Id"
+              method="post"
+              class="d-inline">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn btn-sm btn-danger mb-1">
+                Rechazar
+            </button>
+        </form>
+    }
+</td>
+
                         </tr>
                     }
                 }
