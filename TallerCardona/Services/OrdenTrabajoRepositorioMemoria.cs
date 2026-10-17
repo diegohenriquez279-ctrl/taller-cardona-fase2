@@ -34,10 +34,22 @@ public class OrdenTrabajoRepositorioMemoria : IOrdenTrabajoRepositorio
             throw new ArgumentException("El vehículo indicado no existe.");
 
         orden.Id = _siguienteId++;
-        orden.Vehiculo = vehiculo;
+orden.Vehiculo = vehiculo;
 
-        _ordenes.Add(orden);
-        vehiculo.Ordenes.Add(orden);
+foreach (var servicio in orden.Servicios)
+{
+    servicio.OrdenTrabajoId = orden.Id;
+    servicio.OrdenTrabajo = orden;
+}
+
+foreach (var repuesto in orden.Repuestos)
+{
+    repuesto.OrdenTrabajoId = orden.Id;
+    repuesto.OrdenTrabajo = orden;
+}
+
+_ordenes.Add(orden);
+vehiculo.Ordenes.Add(orden);
     }
 
     public void Actualizar(OrdenTrabajo orden)
