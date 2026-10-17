@@ -3,7 +3,7 @@ using TallerCardona.Models;
 
 namespace TallerCardona.Services;
 
-public class ServicioRepositorioMemoria
+public class ServicioRepositorioMemoria : IServicioRepositorio
 {
     private readonly List<Servicio> _servicios = new()
     {
