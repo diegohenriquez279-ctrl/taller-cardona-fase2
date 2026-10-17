@@ -48,7 +48,10 @@ public class OrdenesTrabajoController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public IActionResult Create(OrdenTrabajo orden)
+    public IActionResult Create(
+        OrdenTrabajo orden,
+        int[]? servicioIds,
+        int[]? repuestoIds)
     {
         if (_vehiculos.ObtenerPorId(orden.VehiculoId) is null)
         {
@@ -57,11 +60,55 @@ public class OrdenesTrabajoController : Controller
                 "Seleccione un vehículo registrado.");
         }
 
+        var serviciosDisponibles = _servicios.Listar();
+        var repuestosDisponibles = _repuestos.Listar();
+
+        var serviciosSeleccionados = servicioIds ?? Array.Empty<int>();
+        var repuestosSeleccionados = repuestoIds ?? Array.Empty<int>();
+
+        if (serviciosSeleccionados.Any(id =>
+                !serviciosDisponibles.Any(s => s.Id == id)))
+        {
+            ModelState.AddModelError(
+                string.Empty,
+                "Uno de los servicios seleccionados no está disponible.");
+        }
+
+        if (repuestosSeleccionados.Any(id =>
+                !repuestosDisponibles.Any(r => r.Id == id)))
+        {
+            ModelState.AddModelError(
+                string.Empty,
+                "Uno de los repuestos seleccionados no está disponible.");
+        }
+
         if (!ModelState.IsValid)
         {
             CargarListas(orden.VehiculoId);
             return View(orden);
         }
+
+        orden.Servicios = serviciosDisponibles
+            .Where(s => serviciosSeleccionados.Contains(s.Id))
+            .Select(s => new DetalleServicio
+            {
+                ServicioId = s.Id,
+                Servicio = s,
+                Cantidad = 1,
+                PrecioUnitario = s.PrecioBase
+            })
+            .ToList();
+
+        orden.Repuestos = repuestosDisponibles
+            .Where(r => repuestosSeleccionados.Contains(r.Id))
+            .Select(r => new DetalleRepuesto
+            {
+                RepuestoId = r.Id,
+                Repuesto = r,
+                Cantidad = 1,
+                PrecioUnitario = r.Precio
+            })
+            .ToList();
 
         _ordenes.Agregar(orden);
 
