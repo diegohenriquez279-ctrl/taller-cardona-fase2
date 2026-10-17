@@ -28,7 +28,7 @@ public class PresupuestosController : Controller
 
         return View(presupuesto);
     }
-    
+
     [HttpPost]
     [ValidateAntiForgeryToken]
     public IActionResult Autorizar(int id)
@@ -38,10 +38,20 @@ public class PresupuestosController : Controller
         if (presupuesto is null)
             return NotFound();
 
+        if (presupuesto.Estado != EstadoPresupuesto.Pendiente)
+        {
+            TempData["Error"] =
+                "Solo se pueden autorizar presupuestos pendientes.";
+
+            return RedirectToAction(nameof(Index));
+        }
+
         presupuesto.Estado = EstadoPresupuesto.Autorizado;
         _presupuestos.Actualizar(presupuesto);
 
-        TempData["Mensaje"] = "Presupuesto autorizado correctamente.";
+        TempData["Mensaje"] =
+            "Presupuesto autorizado correctamente.";
+
         return RedirectToAction(nameof(Index));
     }
 
@@ -54,11 +64,19 @@ public class PresupuestosController : Controller
         if (presupuesto is null)
             return NotFound();
 
+        if (presupuesto.Estado != EstadoPresupuesto.Pendiente)
+        {
+            TempData["Error"] =
+                "Solo se pueden rechazar presupuestos pendientes.";
+
+            return RedirectToAction(nameof(Index));
+        }
+
         presupuesto.Estado = EstadoPresupuesto.Rechazado;
         _presupuestos.Actualizar(presupuesto);
 
         TempData["Mensaje"] = "Presupuesto rechazado.";
+
         return RedirectToAction(nameof(Index));
     }
-
 }
