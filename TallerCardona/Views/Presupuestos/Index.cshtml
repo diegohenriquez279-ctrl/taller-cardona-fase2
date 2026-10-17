@@ -1,0 +1,42 @@
+
+@model IEnumerable<TallerCardona.Models.Presupuesto>
+
+@{
+    ViewData["Title"] = "Presupuestos";
+}
+
+<div class="container mt-4">
+    <h1 class="mb-3">Gestión de presupuestos</h1>
+
+    <p class="text-muted">
+        Consulta y administra los presupuestos de las órdenes de trabajo
+        del Taller Cardona.
+    </p>
+
+    <div class="alert alert-info" role="alert">
+        Aquí se mostrarán los presupuestos registrados.
+        Estamos preparando las funciones para crearlos y administrarlos.
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead class="table-dark">
+                <tr>
+                    <th>N.º</th>
+                    <th>Fecha</th>
+                    <th>Orden de trabajo</th>
+                    <th>Total estimado</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td colspan="5" class="text-center">
+                        Aún no hay presupuestos para mostrar.
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+  
