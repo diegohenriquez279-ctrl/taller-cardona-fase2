@@ -8,12 +8,15 @@ namespace TallerCardona.Controllers;
 public class PresupuestosController : Controller
 {
     private readonly IPresupuestoRepositorio _presupuestos;
+    private readonly IOrdenTrabajoRepositorio _ordenes;
 
-    public PresupuestosController(IPresupuestoRepositorio presupuestos)
-    {
-        _presupuestos = presupuestos;
-    }
-
+    public PresupuestosController(
+    IPresupuestoRepositorio presupuestos,
+    IOrdenTrabajoRepositorio ordenes)
+{
+    _presupuestos = presupuestos;
+    _ordenes = ordenes;
+}
     public IActionResult Index()
     {
         return View(_presupuestos.Listar());
