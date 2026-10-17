@@ -1,0 +1,82 @@
+
+@model TallerCardona.Models.OrdenTrabajo
+
+@{
+    ViewData["Title"] = "Detalle de orden de trabajo";
+}
+
+<div class="container mt-4">
+    <h1 class="mb-3">Detalle de orden de trabajo</h1>
+
+    <div class="card">
+        <div class="card-header">
+            Orden de trabajo N.º @Model.Id
+        </div>
+
+        <div class="card-body">
+            <dl class="row">
+                <dt class="col-sm-4">Fecha de ingreso</dt>
+                <dd class="col-sm-8">
+                    @Model.FechaIngreso.ToString("dd/MM/yyyy HH:mm")
+                </dd>
+
+                <dt class="col-sm-4">Vehículo</dt>
+                <dd class="col-sm-8">
+                    @(Model.Vehiculo?.Placa ?? "Sin vehículo")
+                    — @(Model.Vehiculo?.Marca ?? "")
+                    @(Model.Vehiculo?.Modelo ?? "")
+                </dd>
+
+                <dt class="col-sm-4">Problema reportado</dt>
+                <dd class="col-sm-8">@Model.ProblemaReportado</dd>
+
+                <dt class="col-sm-4">Diagnóstico</dt>
+                <dd class="col-sm-8">
+                    @(string.IsNullOrWhiteSpace(Model.Diagnostico)
+                        ? "Sin diagnóstico"
+                        : Model.Diagnostico)
+                </dd>
+
+                <dt class="col-sm-4">Kilometraje de ingreso</dt>
+                <dd class="col-sm-8">@Model.KilometrajeIngreso.ToString("N0") km</dd>
+
+                <dt class="col-sm-4">Estado</dt>
+                <dd class="col-sm-8">@Model.Estado</dd>
+
+                <dt class="col-sm-4">Observaciones</dt>
+                <dd class="col-sm-8">
+                    @(string.IsNullOrWhiteSpace(Model.Observaciones)
+                        ? "Sin observaciones"
+                        : Model.Observaciones)
+                </dd>
+
+                <dt class="col-sm-4">Presupuesto</dt>
+                <dd class="col-sm-8">
+                    @if (Model.Presupuesto is not null)
+                    {
+                        <span>@Model.Presupuesto.TotalEstimado.ToString("C2")</span>
+                        <span> — @Model.Presupuesto.Estado</span>
+                    }
+                    else
+                    {
+                        <span>Sin presupuesto registrado</span>
+                    }
+                </dd>
+            </dl>
+
+            <a asp-action="Index" class="btn btn-secondary">
+                Volver al listado
+            </a>
+
+            @if (Model.Presupuesto is null)
+            {
+                <a asp-controller="Presupuestos"
+                   asp-action="Crear"
+                   asp-route-ordenTrabajoId="@Model.Id"
+                   class="btn btn-success">
+                    Crear presupuesto
+                </a>
+            }
+        </div>
+    </div>
+</div>
