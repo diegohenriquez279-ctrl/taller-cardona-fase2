@@ -48,6 +48,11 @@ public class PresupuestoRepositorioMemoria : IPresupuestoRepositorio
         existente.TotalEstimado = presupuesto.TotalEstimado;
         existente.Observaciones = presupuesto.Observaciones;
         existente.OrdenTrabajoId = presupuesto.OrdenTrabajoId;
-        existente.OrdenTrabajo = presupuesto.OrdenTrabajo;
+
+        // Conserva la referencia de la orden cuando se proporciona.
+        if (presupuesto.OrdenTrabajo is not null)
+        {
+            existente.OrdenTrabajo = presupuesto.OrdenTrabajo;
+        }
     }
 }
