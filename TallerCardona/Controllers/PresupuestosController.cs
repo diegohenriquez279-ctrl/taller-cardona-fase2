@@ -8,6 +8,8 @@ public class PresupuestosController : Controller
 {
     public IActionResult Index()
     {
-        return View();
+        var presupuestos = new List<Presupuesto>();
+
+        return View(presupuestos);
     }
 }
