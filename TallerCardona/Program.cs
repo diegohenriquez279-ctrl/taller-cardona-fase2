@@ -10,6 +10,9 @@ builder.Services.AddSingleton<IVehiculoRepositorio, VehiculoRepositorioMemoria>(
 builder.Services.AddSingleton<IPresupuestoRepositorio, PresupuestoRepositorioMemoria>();
 builder.Services.AddSingleton<IOrdenTrabajoRepositorio, OrdenTrabajoRepositorioMemoria>();
 
+builder.Services.AddSingleton<ServicioRepositorioMemoria>();
+builder.Services.AddSingleton<RepuestoRepositorioMemoria>();
+
 
 var app = builder.Build();
 
