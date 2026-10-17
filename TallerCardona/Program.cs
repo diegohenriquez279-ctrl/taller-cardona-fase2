@@ -7,6 +7,7 @@ builder.Services.AddControllersWithViews();
 
 builder.Services.AddSingleton<IClienteRepositorio, ClienteRepositorioMemoria>();
 builder.Services.AddSingleton<IVehiculoRepositorio, VehiculoRepositorioMemoria>();
+builder.Services.AddSingleton<IPresupuestoRepositorio, PresupuestoRepositorioMemoria>();
 
 var app = builder.Build();
 
