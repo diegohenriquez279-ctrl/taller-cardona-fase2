@@ -10,13 +10,19 @@ public class OrdenesTrabajoController : Controller
 {
     private readonly IOrdenTrabajoRepositorio _ordenes;
     private readonly IVehiculoRepositorio _vehiculos;
+    private readonly IServicioRepositorio _servicios;
+    private readonly IRepuestoRepositorio _repuestos;
 
     public OrdenesTrabajoController(
         IOrdenTrabajoRepositorio ordenes,
-        IVehiculoRepositorio vehiculos)
+        IVehiculoRepositorio vehiculos,
+        IServicioRepositorio servicios,
+        IRepuestoRepositorio repuestos)
     {
         _ordenes = ordenes;
         _vehiculos = vehiculos;
+        _servicios = servicios;
+        _repuestos = repuestos;
     }
 
     public IActionResult Index()
@@ -36,7 +42,7 @@ public class OrdenesTrabajoController : Controller
 
     public IActionResult Create()
     {
-        CargarVehiculos();
+        CargarListas();
         return View(new OrdenTrabajo());
     }
 
@@ -53,23 +59,34 @@ public class OrdenesTrabajoController : Controller
 
         if (!ModelState.IsValid)
         {
-            CargarVehiculos(orden.VehiculoId);
+            CargarListas(orden.VehiculoId);
             return View(orden);
         }
 
         _ordenes.Agregar(orden);
 
-        TempData["Mensaje"] = "Orden de trabajo registrada correctamente.";
+        TempData["Mensaje"] =
+            "Orden de trabajo registrada correctamente.";
 
         return RedirectToAction(nameof(Index));
     }
 
-    private void CargarVehiculos(int? seleccionado = null)
+    private void CargarListas(int? vehiculoSeleccionado = null)
     {
         ViewBag.Vehiculos = new SelectList(
             _vehiculos.Listar(),
             nameof(Vehiculo.Id),
             nameof(Vehiculo.Placa),
-            seleccionado);
+            vehiculoSeleccionado);
+
+        ViewBag.Servicios = new SelectList(
+            _servicios.Listar(),
+            nameof(Servicio.Id),
+            nameof(Servicio.Nombre));
+
+        ViewBag.Repuestos = new SelectList(
+            _repuestos.Listar(),
+            nameof(Repuesto.Id),
+            nameof(Repuesto.Nombre));
     }
 }
