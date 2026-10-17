@@ -1,3 +1,4 @@
+
 @using TallerCardona.Models
 @model IEnumerable<TallerCardona.Models.Presupuesto>
 
@@ -13,6 +14,11 @@
                 Consulta los presupuestos de las órdenes de trabajo.
             </p>
         </div>
+        <a asp-controller="OrdenesTrabajo"
+           asp-action="Index"
+           class="btn btn-primary">
+            Ver órdenes de trabajo
+        </a>
     </div>
 
     @if (TempData["Mensaje"] is string mensaje)
@@ -45,41 +51,68 @@
                         <tr>
                             <td>@presupuesto.Id</td>
                             <td>@presupuesto.Fecha.ToString("dd/MM/yyyy")</td>
-                            <td>@presupuesto.OrdenTrabajoId</td>
-                            <td>@presupuesto.TotalEstimado.ToString("C2")</td>
-                            <td>@presupuesto.Estado</td>
-                            
-<td>
-    <a asp-action="Details"
-       asp-route-id="@presupuesto.Id"
-       class="btn btn-sm btn-primary mb-1">
-        Ver detalles
-    </a>
+                            <td>
+                                <a asp-controller="OrdenesTrabajo"
+                                   asp-action="Details"
+                                   asp-route-id="@presupuesto.OrdenTrabajoId">
+                                    Orden N.º @presupuesto.OrdenTrabajoId
+                                </a>
+                            </td>
+                            <td class="fw-bold">
+                                @presupuesto.TotalEstimado.ToString("C2")
+                            </td>
+                            <td>
+                                @if (presupuesto.Estado == EstadoPresupuesto.Pendiente)
+                                {
+                                    <span class="badge bg-warning text-dark">
+                                        Pendiente
+                                    </span>
+                                }
+                                else if (presupuesto.Estado == EstadoPresupuesto.Autorizado)
+                                {
+                                    <span class="badge bg-success">
+                                        Autorizado
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger">
+                                        Rechazado
+                                    </span>
+                                }
+                            </td>
+                            <td>
+                                <a asp-action="Details"
+                                   asp-route-id="@presupuesto.Id"
+                                   class="btn btn-sm btn-primary mb-1">
+                                    Ver detalles
+                                </a>
 
-    @if (presupuesto.Estado == EstadoPresupuesto.Pendiente)
-    {
-        <form asp-action="Autorizar"
-              asp-route-id="@presupuesto.Id"
-              method="post"
-              class="d-inline">
-            @Html.AntiForgeryToken()
-            <button type="submit" class="btn btn-sm btn-success mb-1">
-                Autorizar
-            </button>
-        </form>
+                                @if (presupuesto.Estado == EstadoPresupuesto.Pendiente)
+                                {
+                                    <form asp-action="Autorizar"
+                                          asp-route-id="@presupuesto.Id"
+                                          method="post"
+                                          class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit"
+                                                class="btn btn-sm btn-success mb-1">
+                                            Autorizar
+                                        </button>
+                                    </form>
 
-        <form asp-action="Rechazar"
-              asp-route-id="@presupuesto.Id"
-              method="post"
-              class="d-inline">
-            @Html.AntiForgeryToken()
-            <button type="submit" class="btn btn-sm btn-danger mb-1">
-                Rechazar
-            </button>
-        </form>
-    }
-</td>
-
+                                    <form asp-action="Rechazar"
+                                          asp-route-id="@presupuesto.Id"
+                                          method="post"
+                                          class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit"
+                                                class="btn btn-sm btn-danger mb-1">
+                                            Rechazar
+                                        </button>
+                                    </form>
+                                }
+                            </td>
                         </tr>
                     }
                 }
