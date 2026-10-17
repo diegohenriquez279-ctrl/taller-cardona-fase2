@@ -22,8 +22,18 @@ public class PresupuestoRepositorioMemoria : IPresupuestoRepositorio
 
     public void Agregar(Presupuesto presupuesto)
     {
+        var duplicado = _presupuestos.Any(p =>
+            p.OrdenTrabajoId == presupuesto.OrdenTrabajoId);
+
+        if (duplicado)
+        {
+            throw new InvalidOperationException(
+                "Esta orden de trabajo ya tiene un presupuesto.");
+        }
+
         presupuesto.Id = _siguienteId++;
         presupuesto.Fecha = DateTime.Now;
+
         _presupuestos.Add(presupuesto);
     }
 
@@ -37,5 +47,7 @@ public class PresupuestoRepositorioMemoria : IPresupuestoRepositorio
         existente.Estado = presupuesto.Estado;
         existente.TotalEstimado = presupuesto.TotalEstimado;
         existente.Observaciones = presupuesto.Observaciones;
+        existente.OrdenTrabajoId = presupuesto.OrdenTrabajoId;
+        existente.OrdenTrabajo = presupuesto.OrdenTrabajo;
     }
 }
