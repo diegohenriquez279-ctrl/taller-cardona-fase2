@@ -28,4 +28,37 @@ public class PresupuestosController : Controller
 
         return View(presupuesto);
     }
+    
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult Autorizar(int id)
+    {
+        var presupuesto = _presupuestos.ObtenerPorId(id);
+
+        if (presupuesto is null)
+            return NotFound();
+
+        presupuesto.Estado = EstadoPresupuesto.Autorizado;
+        _presupuestos.Actualizar(presupuesto);
+
+        TempData["Mensaje"] = "Presupuesto autorizado correctamente.";
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult Rechazar(int id)
+    {
+        var presupuesto = _presupuestos.ObtenerPorId(id);
+
+        if (presupuesto is null)
+            return NotFound();
+
+        presupuesto.Estado = EstadoPresupuesto.Rechazado;
+        _presupuestos.Actualizar(presupuesto);
+
+        TempData["Mensaje"] = "Presupuesto rechazado.";
+        return RedirectToAction(nameof(Index));
+    }
+
 }
