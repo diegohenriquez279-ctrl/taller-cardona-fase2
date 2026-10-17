@@ -33,7 +33,8 @@ public class PresupuestosController : Controller
         return View(presupuesto);
     }
 
-    [HttpGet]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
     public IActionResult Crear(int ordenTrabajoId)
     {
         var orden = _ordenes.ObtenerPorId(ordenTrabajoId);
@@ -41,23 +42,34 @@ public class PresupuestosController : Controller
         if (orden is null)
         {
             TempData["Error"] = "No se encontró la orden de trabajo.";
-            return RedirectToAction(nameof(Index));
+            return RedirectToAction("Index", "OrdenesTrabajo");
         }
 
-        if (orden.Presupuesto is not null)
+        if (orden.Presupuesto is not null ||
+            _presupuestos.Listar().Any(p => p.OrdenTrabajoId == orden.Id))
         {
             TempData["Error"] = "Esta orden ya tiene un presupuesto.";
-            return RedirectToAction(nameof(Index));
+            return RedirectToAction("Index", "OrdenesTrabajo");
         }
 
         var totalServicios = orden.Servicios.Sum(s => s.Subtotal);
         var totalRepuestos = orden.Repuestos.Sum(r => r.Subtotal);
+        var total = totalServicios + totalRepuestos;
+
+        if (total <= 0)
+        {
+            TempData["Error"] =
+                "No se puede crear un presupuesto de cero. Verifique los servicios y repuestos de la orden.";
+
+            return RedirectToAction("Details", "OrdenesTrabajo",
+                new { id = orden.Id });
+        }
 
         var presupuesto = new Presupuesto
         {
             OrdenTrabajoId = orden.Id,
             OrdenTrabajo = orden,
-            TotalEstimado = totalServicios + totalRepuestos,
+            TotalEstimado = total,
             Estado = EstadoPresupuesto.Pendiente
         };
 
