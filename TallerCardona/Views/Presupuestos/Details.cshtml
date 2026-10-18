@@ -1,0 +1,183 @@
+
+@model TallerCardona.Models.Presupuesto
+
+@{
+    ViewData["Title"] = "Detalle del presupuesto";
+    var orden = Model.OrdenTrabajo;
+    var totalServicios = orden?.Servicios.Sum(s => s.Subtotal) ?? 0m;
+    var totalRepuestos = orden?.Repuestos.Sum(r => r.Subtotal) ?? 0m;
+}
+
+<div class="container mt-4">
+    <h1 class="mb-3">Detalle del presupuesto</h1>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            Presupuesto N.º @Model.Id
+        </div>
+
+        <div class="card-body">
+            <dl class="row">
+                <dt class="col-sm-4">Fecha</dt>
+                <dd class="col-sm-8">
+                    @Model.Fecha.ToString("dd/MM/yyyy HH:mm")
+                </dd>
+
+                <dt class="col-sm-4">Orden de trabajo</dt>
+                <dd class="col-sm-8">
+                    <a asp-controller="OrdenesTrabajo"
+                       asp-action="Details"
+                       asp-route-id="@Model.OrdenTrabajoId">
+                        Orden N.º @Model.OrdenTrabajoId
+                    </a>
+                </dd>
+
+                <dt class="col-sm-4">Vehículo</dt>
+                <dd class="col-sm-8">
+                    @(orden?.Vehiculo?.Placa ?? "No disponible")
+                    — @(orden?.Vehiculo?.Marca ?? "")
+                    @(orden?.Vehiculo?.Modelo ?? "")
+                </dd>
+
+                <dt class="col-sm-4">Total estimado</dt>
+                <dd class="col-sm-8 fw-bold">
+                    @Model.TotalEstimado.ToString("C2")
+                </dd>
+
+                <dt class="col-sm-4">Estado</dt>
+                <dd class="col-sm-8">
+                    <span class="badge @(Model.Estado == TallerCardona.Models.EstadoPresupuesto.Pendiente ? "bg-warning text-dark" : Model.Estado == TallerCardona.Models.EstadoPresupuesto.Autorizado ? "bg-success" : "bg-danger")">
+                        @Model.Estado
+                    </span>
+                </dd>
+
+                <dt class="col-sm-4">Observaciones</dt>
+                <dd class="col-sm-8">
+                    @(string.IsNullOrWhiteSpace(Model.Observaciones)
+                        ? "Sin observaciones"
+                        : Model.Observaciones)
+                </dd>
+            </dl>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <h4 class="mb-0">Servicios</h4>
+        </div>
+        <div class="card-body">
+            @if (orden?.Servicios.Any() == true)
+            {
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Descripción</th>
+                                <th>Cantidad</th>
+                                <th>Precio unitario</th>
+                                <th>Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var servicio in orden.Servicios)
+                            {
+                                <tr>
+                                    <td>
+                                        @(servicio.Servicio?.Nombre
+                                            ?? $"Servicio #{servicio.ServicioId}")
+                                    </td>
+                                    <td>@servicio.Cantidad</td>
+                                    <td>@servicio.PrecioUnitario.ToString("C2")</td>
+                                    <td>@servicio.Subtotal.ToString("C2")</td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <th colspan="3" class="text-end">Total servicios</th>
+                                <th>@totalServicios.ToString("C2")</th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <p class="text-muted mb-0">
+                    No hay servicios registrados en esta orden.
+                </p>
+            }
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <h4 class="mb-0">Repuestos</h4>
+        </div>
+        <div class="card-body">
+            @if (orden?.Repuestos.Any() == true)
+            {
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Descripción</th>
+                                <th>Cantidad</th>
+                                <th>Precio unitario</th>
+                                <th>Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var repuesto in orden.Repuestos)
+                            {
+                                <tr>
+                                    <td>
+                                        @(repuesto.Repuesto?.Nombre
+                                            ?? $"Repuesto #{repuesto.RepuestoId}")
+                                    </td>
+                                    <td>@repuesto.Cantidad</td>
+                                    <td>@repuesto.PrecioUnitario.ToString("C2")</td>
+                                    <td>@repuesto.Subtotal.ToString("C2")</td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <th colspan="3" class="text-end">Total repuestos</th>
+                                <th>@totalRepuestos.ToString("C2")</th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <p class="text-muted mb-0">
+                    No hay repuestos registrados en esta orden.
+                </p>
+            }
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="d-flex justify-content-between">
+                <span>Total de servicios</span>
+                <span>@totalServicios.ToString("C2")</span>
+            </div>
+            <div class="d-flex justify-content-between">
+                <span>Total de repuestos</span>
+                <span>@totalRepuestos.ToString("C2")</span>
+            </div>
+            <hr />
+            <div class="d-flex justify-content-between fw-bold fs-5">
+                <span>Total del presupuesto</span>
+                <span>@Model.TotalEstimado.ToString("C2")</span>
+            </div>
+        </div>
+    </div>
+
+    <a asp-action="Index" class="btn btn-secondary">
+        Volver al listado
+    </a>
+</div>

@@ -1,0 +1,132 @@
+
+@model TallerCardona.Models.OrdenTrabajo
+
+@{
+    ViewData["Title"] = "Registrar orden de trabajo";
+}
+
+<div class="container mt-4">
+    <h1>Registrar orden de trabajo</h1>
+    <p class="text-muted">
+        Complete los datos del vehículo, el problema y los servicios necesarios.
+    </p>
+
+    <div class="card">
+        <div class="card-body">
+            <form asp-action="Create" method="post">
+                @Html.AntiForgeryToken()
+
+                <div asp-validation-summary="ModelOnly"
+                     class="text-danger mb-3"></div>
+
+                <div class="mb-3">
+                    <label asp-for="VehiculoId" class="form-label">
+                        Vehículo
+                    </label>
+                    <select asp-for="VehiculoId"
+                            asp-items="ViewBag.Vehiculos"
+                            class="form-select">
+                        <option value="">Seleccione un vehículo</option>
+                    </select>
+                    <span asp-validation-for="VehiculoId"
+                          class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="ProblemaReportado" class="form-label">
+                        Problema reportado
+                    </label>
+                    <textarea asp-for="ProblemaReportado"
+                              class="form-control"
+                              rows="3"
+                              required></textarea>
+                    <span asp-validation-for="ProblemaReportado"
+                          class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="KilometrajeIngreso" class="form-label">
+                        Kilometraje de ingreso
+                    </label>
+                    <input asp-for="KilometrajeIngreso"
+                           type="number"
+                           min="0"
+                           step="0.01"
+                           class="form-control"
+                           required />
+                    <span asp-validation-for="KilometrajeIngreso"
+                          class="text-danger"></span>
+                </div>
+
+                <hr />
+
+                <h4>Servicios</h4>
+                <p class="text-muted">
+                    Seleccione uno o varios servicios. Puede dejarlo vacío.
+                </p>
+
+                <div class="mb-3">
+                    <label class="form-label">Servicios disponibles</label>
+                    <select name="servicioIds"
+                            asp-items="ViewBag.Servicios"
+                            class="form-select"
+                            multiple
+                            size="3">
+                    </select>
+                    <small class="form-text text-muted">
+                        Mantenga presionada la tecla Ctrl para seleccionar varios
+                        servicios en Windows.
+                    </small>
+                </div>
+
+                <hr />
+
+                <h4>Repuestos</h4>
+                <p class="text-muted">
+                    Seleccione los repuestos que se utilizarán.
+                </p>
+
+                <div class="mb-3">
+                    <label class="form-label">Repuestos disponibles</label>
+                    <select name="repuestoIds"
+                            asp-items="ViewBag.Repuestos"
+                            class="form-select"
+                            multiple
+                            size="3">
+                    </select>
+                    <small class="form-text text-muted">
+                        Mantenga presionada la tecla Ctrl para seleccionar varios
+                        repuestos en Windows.
+                    </small>
+                </div>
+
+                <hr />
+
+                <div class="mb-3">
+                    <label asp-for="Diagnostico" class="form-label">
+                        Diagnóstico (opcional)
+                    </label>
+                    <textarea asp-for="Diagnostico"
+                              class="form-control"
+                              rows="2"></textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Observaciones" class="form-label">
+                        Observaciones (opcional)
+                    </label>
+                    <textarea asp-for="Observaciones"
+                              class="form-control"
+                              rows="2"></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-primary">
+                    Guardar orden
+                </button>
+                <a asp-action="Index" class="btn btn-secondary">
+                    Cancelar
+                </a>
+            </form>
+        </div>
+    </div>
+</div>
