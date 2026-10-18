@@ -14,17 +14,38 @@ public class OrdenTrabajoRepositorioMemoria : IOrdenTrabajoRepositorio
         _vehiculos = vehiculos;
     }
 
-    public List<OrdenTrabajo> Listar()
+    public List<OrdenTrabajo> Listar(
+        string? busqueda = null,
+        EstadoOrden? estado = null)
     {
-        return _ordenes
+        var resultado = _ordenes.AsEnumerable();
+
+        if (estado.HasValue)
+            resultado = resultado.Where(o => o.Estado == estado.Value);
+
+        if (!string.IsNullOrWhiteSpace(busqueda))
+        {
+            resultado = resultado.Where(o =>
+                o.Id.ToString() == busqueda.Trim() ||
+                o.ProblemaReportado.Contains(
+                    busqueda, StringComparison.OrdinalIgnoreCase) ||
+                (o.Vehiculo?.Placa.Contains(
+                    busqueda, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                (o.Vehiculo?.Marca.Contains(
+                    busqueda, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                (o.Vehiculo?.Modelo.Contains(
+                    busqueda, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                (o.Vehiculo?.Cliente?.Nombre.Contains(
+                    busqueda, StringComparison.OrdinalIgnoreCase) ?? false));
+        }
+
+        return resultado
             .OrderByDescending(o => o.FechaIngreso)
             .ToList();
     }
 
-    public OrdenTrabajo? ObtenerPorId(int id)
-    {
-        return _ordenes.FirstOrDefault(o => o.Id == id);
-    }
+    public OrdenTrabajo? ObtenerPorId(int id) =>
+        _ordenes.FirstOrDefault(o => o.Id == id);
 
     public void Agregar(OrdenTrabajo orden)
     {
@@ -34,30 +55,31 @@ public class OrdenTrabajoRepositorioMemoria : IOrdenTrabajoRepositorio
             throw new ArgumentException("El vehículo indicado no existe.");
 
         orden.Id = _siguienteId++;
-orden.Vehiculo = vehiculo;
+        orden.Vehiculo = vehiculo;
 
-foreach (var servicio in orden.Servicios)
-{
-    servicio.OrdenTrabajoId = orden.Id;
-    servicio.OrdenTrabajo = orden;
-}
+        foreach (var servicio in orden.Servicios)
+        {
+            servicio.OrdenTrabajoId = orden.Id;
+            servicio.OrdenTrabajo = orden;
+        }
 
-foreach (var repuesto in orden.Repuestos)
-{
-    repuesto.OrdenTrabajoId = orden.Id;
-    repuesto.OrdenTrabajo = orden;
-}
+        foreach (var repuesto in orden.Repuestos)
+        {
+            repuesto.OrdenTrabajoId = orden.Id;
+            repuesto.OrdenTrabajo = orden;
+        }
 
-_ordenes.Add(orden);
-vehiculo.Ordenes.Add(orden);
+        AjustarFechaEntrega(orden);
+        _ordenes.Add(orden);
+
+        if (!vehiculo.Ordenes.Any(o => o.Id == orden.Id))
+            vehiculo.Ordenes.Add(orden);
     }
 
     public void Actualizar(OrdenTrabajo orden)
     {
         var existente = ObtenerPorId(orden.Id);
-
-        if (existente is null)
-            return;
+        if (existente is null) return;
 
         var vehiculoAnterior = existente.Vehiculo;
         var vehiculoNuevo = _vehiculos.ObtenerPorId(orden.VehiculoId);
@@ -68,10 +90,12 @@ vehiculo.Ordenes.Add(orden);
         if (vehiculoAnterior?.Id != vehiculoNuevo.Id)
         {
             vehiculoAnterior?.Ordenes.Remove(existente);
-            vehiculoNuevo.Ordenes.Add(existente);
+
+            if (!vehiculoNuevo.Ordenes.Any(o => o.Id == existente.Id))
+                vehiculoNuevo.Ordenes.Add(existente);
         }
 
-        existente.FechaEntrega = orden.FechaEntrega;
+        existente.FechaIngreso = orden.FechaIngreso;
         existente.ProblemaReportado = orden.ProblemaReportado;
         existente.Diagnostico = orden.Diagnostico;
         existente.Estado = orden.Estado;
@@ -81,5 +105,48 @@ vehiculo.Ordenes.Add(orden);
         existente.Vehiculo = vehiculoNuevo;
         existente.Servicios = orden.Servicios;
         existente.Repuestos = orden.Repuestos;
+
+        foreach (var servicio in existente.Servicios)
+        {
+            servicio.OrdenTrabajoId = existente.Id;
+            servicio.OrdenTrabajo = existente;
+        }
+
+        foreach (var repuesto in existente.Repuestos)
+        {
+            repuesto.OrdenTrabajoId = existente.Id;
+            repuesto.OrdenTrabajo = existente;
+        }
+
+        AjustarFechaEntrega(existente);
+    }
+
+    public void CambiarEstado(int id, EstadoOrden estado)
+    {
+        var orden = ObtenerPorId(id);
+        if (orden is null) return;
+
+        orden.Estado = estado;
+        AjustarFechaEntrega(orden);
+    }
+
+    public void Eliminar(int id)
+    {
+        var orden = ObtenerPorId(id);
+        if (orden is null) return;
+
+        orden.Vehiculo?.Ordenes.Remove(orden);
+        _ordenes.Remove(orden);
+    }
+
+    public List<Vehiculo> ListarVehiculos() =>
+        _vehiculos.Listar();
+
+    private static void AjustarFechaEntrega(OrdenTrabajo orden)
+    {
+        if (orden.Estado == EstadoOrden.Entregado)
+            orden.FechaEntrega ??= DateTime.Now;
+        else
+            orden.FechaEntrega = null;
     }
 }
