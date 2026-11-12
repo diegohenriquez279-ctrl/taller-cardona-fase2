@@ -24,6 +24,7 @@ body { display:flex; min-height:100vh; background:#f3f4f6; }
 table { width:100%; border-collapse:collapse; font-size:13px; }
 th, td { padding:10px; border-bottom:1px solid #e5e7eb; text-align:left; }
 th { background:#f9fafb; }
+.total { margin-top:14px; font-size:13px; }
 </style>
 </head>
 <body>
@@ -48,7 +49,7 @@ th { background:#f9fafb; }
 <tr><td>@p.OrdenTrabajoId</td><td>@p.Fecha.ToShortDateString()</td><td>@p.Monto.ToString("C")</td><td>@p.MetodoPago</td></tr>
 }
 </table>
-<p style="margin-top:14px; font-size:13px;"><b>Total recaudado:</b> @Model.Sum(x => x.Monto).ToString("C")</p>
+<p class="total"><b>Total recaudado:</b> @Model.Sum(x => x.Monto).ToString("C") | <b>Cantidad de pagos:</b> @Model.Count</p>
 </div>
 </div>
 </body>
