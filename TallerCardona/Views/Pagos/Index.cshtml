@@ -1,0 +1,55 @@
+@model List<TallerCardona.Models.Pago>
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<title>Pagos y reportes - Taller Cardona S.A.</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI', Arial, sans-serif; }
+body { display:flex; min-height:100vh; background:#f3f4f6; }
+.sidebar { width:230px; background:#0a1628; color:white; padding:20px 14px; display:flex; flex-direction:column; }
+.sidebar h3 { font-size:15px; font-weight:700; }
+.sidebar p { font-size:11px; color:#9ca3af; margin-bottom:22px; }
+.sidebar a { display:block; color:#d1d5db; text-decoration:none; padding:9px 10px; font-size:13px; border-radius:6px; margin-bottom:4px; }
+.sidebar a.active { background:#c2410c; color:white; font-weight:600; }
+.sidebar .footer { margin-top:auto; font-size:10px; color:#9ca3af; }
+.main { flex:1; padding:28px 34px; }
+.main h1 { font-size:22px; }
+.subtitle { font-size:12px; color:#6b7280; margin-bottom:22px; }
+.card { background:white; border-radius:10px; padding:20px; box-shadow:0 1px 3px rgba(0,0,0,0.08); }
+.btn-nuevo { background:#c2410c; color:white; padding:8px 14px; border-radius:6px; text-decoration:none; font-size:13px; font-weight:600; display:inline-block; margin-bottom:14px; }
+table { width:100%; border-collapse:collapse; font-size:13px; }
+th, td { padding:10px; border-bottom:1px solid #e5e7eb; text-align:left; }
+th { background:#f9fafb; }
+</style>
+</head>
+<body>
+<div class="sidebar">
+<h3>Taller Cardona S.A.</h3><p>Gestión del taller</p>
+<a href="/">Inicio</a>
+<a href="/Clientes">Clientes</a>
+<a href="/Vehiculos">Vehículos</a>
+<a href="/OrdenesTrabajo">Órdenes de trabajo</a>
+<a href="/Presupuestos">Presupuestos y catálogo</a>
+<a href="/Pagos" class="active">Pagos y reportes</a>
+<div class="footer">Prototipo - DAS901 - GO1T</div>
+</div>
+<div class="main">
+<h1>Pagos y reportes</h1>
+<p class="subtitle">Listado de cobros registrados</p>
+<div class="card">
+<a href="/Pagos/Create" class="btn-nuevo">+ Registrar pago</a>
+<table>
+<tr><th>Orden</th><th>Fecha</th><th>Monto</th><th>Método</th></tr>
+@foreach(var p in Model) {
+<tr><td>@p.OrdenTrabajoId</td><td>@p.Fecha.ToShortDateString()</td><td>@p.Monto.ToString("C")</td><td>@p.MetodoPago</td></tr>
+}
+</table>
+<p style="margin-top:14px; font-size:13px;"><b>Total recaudado:</b> @Model.Sum(x => x.Monto).ToString("C")</p>
+</div>
+</div>
+</body>
+</html>
