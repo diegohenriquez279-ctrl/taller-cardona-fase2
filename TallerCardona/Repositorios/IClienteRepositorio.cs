@@ -1,6 +1,6 @@
 ﻿using TallerCardona.Models;
 
-namespace TallerCardona.Services;
+namespace TallerCardona.Repositorios;
 
 public interface IClienteRepositorio
 {
