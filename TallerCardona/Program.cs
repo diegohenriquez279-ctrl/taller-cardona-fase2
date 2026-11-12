@@ -15,10 +15,14 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddScoped<IUnidadDeTrabajo, UnidadDeTrabajo>();
 
 // ===== Módulo Clientes (Diego) =====
-builder.Services.AddSingleton<IClienteRepositorio, ClienteRepositorioMemoria>();
+builder.Services.AddScoped<IClienteRepositorio, ClienteRepositorio>();
+builder.Services.AddScoped<IClienteService, ClienteService>();
 
 // ===== Módulo Vehículos (Kimberly) =====
-builder.Services.AddSingleton<IVehiculoRepositorio, VehiculoRepositorioMemoria>();
+// TEMPORAL: la versión en memoria usa su propia lista de clientes.
+// Kimberly reemplaza estas líneas por VehiculoRepositorio y VehiculoService.
+builder.Services.AddSingleton<IVehiculoRepositorio>(_ =>
+    new VehiculoRepositorioMemoria(new ClienteRepositorioMemoria()));
 
 // ===== Módulo Órdenes de trabajo (Ariel) =====
 builder.Services.AddSingleton<IOrdenTrabajoRepositorio, OrdenTrabajoRepositorioMemoria>();
