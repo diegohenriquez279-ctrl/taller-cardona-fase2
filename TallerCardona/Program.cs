@@ -33,7 +33,8 @@ builder.Services.AddSingleton<IServicioRepositorio, ServicioRepositorioMemoria>(
 builder.Services.AddSingleton<IRepuestoRepositorio, RepuestoRepositorioMemoria>();
 
 // ===== Módulo Pagos (Carlos) =====
-// Aquí van IPagoRepositorio / PagoRepositorio e IPagoService / PagoService
+// TEMPORAL: versión en memoria. Carlos la reemplaza por PagoRepositorio y PagoService.
+builder.Services.AddSingleton<IPagoRepositorio, PagoRepositorioMemoria>();
 
 var app = builder.Build();
 
