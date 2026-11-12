@@ -1,4 +1,7 @@
-﻿using TallerCardona.Models;
+// Versión en memoria de la Fase 2. Ya no se usa para Clientes; solo la ocupa
+// temporalmente VehiculoRepositorioMemoria. Se borra cuando Vehículos pase a EF.
+using TallerCardona.Models;
+using TallerCardona.Models.Reportes;
 
 namespace TallerCardona.Repositorios;
 
@@ -28,6 +31,18 @@ public class ClienteRepositorioMemoria : IClienteRepositorio
     }
 
     public Cliente? ObtenerPorId(int id) => _clientes.FirstOrDefault(c => c.Id == id);
+
+    public bool TelefonoEnUso(string telefono, int? excluirId = null) =>
+        _clientes.Any(c => c.Telefono == telefono && c.Id != excluirId);
+
+    public List<ClienteResumen> ListarResumen() =>
+        _clientes.Select(c => new ClienteResumen
+        {
+            Id = c.Id,
+            Nombre = c.Nombre,
+            Telefono = c.Telefono,
+            CantidadVehiculos = c.Vehiculos.Count
+        }).ToList();
 
     public void Agregar(Cliente cliente)
     {
