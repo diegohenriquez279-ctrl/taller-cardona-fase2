@@ -1,0 +1,82 @@
+@model TallerCardona.Models.Pago
+@{
+    Layout = null;
+    ViewData["Title"] = "Registrar pago";
+}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<title>Registrar pago - Taller Cardona S.A.</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI', Arial, sans-serif; }
+body { display:flex; min-height:100vh; background:#f3f4f6; }
+.sidebar { width:230px; background:#0a1628; color:white; padding:20px 14px; display:flex; flex-direction:column; }
+.sidebar h3 { font-size:15px; font-weight:700; }
+.sidebar p { font-size:11px; color:#9ca3af; margin-bottom:22px; }
+.sidebar a { display:block; color:#d1d5db; text-decoration:none; padding:9px 10px; font-size:13px; border-radius:6px; margin-bottom:4px; }
+.sidebar a.active { background:#c2410c; color:white; font-weight:600; }
+.sidebar .footer { margin-top:auto; font-size:10px; color:#9ca3af; }
+.main { flex:1; padding:28px 34px; }
+.main h1 { font-size:22px; color:#111827; }
+.subtitle { font-size:12px; color:#6b7280; margin-bottom:22px; }
+.card { background:white; border-radius:10px; padding:24px; max-width:820px; box-shadow:0 1px 3px rgba(0,0,0,0.08); }
+label { display:block; font-size:12px; font-weight:600; color:#111827; margin:14px 0 6px; }
+input, select { width:100%; padding:9px 10px; border:1px solid #d1d5db; border-radius:6px; font-size:13px; background:white; }
+.row { display:flex; gap:16px; }
+.row > div { flex:1; }
+small { font-size:11px; color:#6b7280; }
+.buttons { margin-top:16px; display:flex; gap:8px; }
+.btn-guardar { background:#c2410c; color:white; border:none; padding:8px 16px; border-radius:6px; font-size:13px; font-weight:600; cursor:pointer; }
+.btn-cancelar { background:white; color:#111827; border:1px solid #d1d5db; padding:8px 16px; border-radius:6px; font-size:13px; text-decoration:none; }
+.alert { background:#fee2e2; color:#991b1b; padding:10px; border-radius:6px; font-size:13px; margin-bottom:12px; }
+</style>
+</head>
+<body>
+<div class="sidebar">
+<h3>Taller Cardona S.A.</h3><p>Gestión del taller</p>
+<a href="/">Inicio</a>
+<a href="/Clientes">Clientes</a>
+<a href="/Vehiculos">Vehículos</a>
+<a href="/OrdenesTrabajo">Órdenes de trabajo</a>
+<a href="/Presupuestos">Presupuestos y catálogo</a>
+<a href="/Pagos" class="active">Pagos y reportes</a>
+<div class="footer">Prototipo - DAS901 - GO1T</div>
+</div>
+<div class="main">
+<h1>Registrar pago</h1>
+<p class="subtitle">Registre el cobro de una orden de trabajo</p>
+<div class="card">
+@if (TempData["Error"] != null) { <div class="alert">@TempData["Error"]</div> }
+<form asp-action="Create" method="post">
+@Html.AntiForgeryToken()
+<label>Orden de trabajo *</label>
+<select asp-for="OrdenTrabajoId" asp-items="ViewBag.Ordenes">
+<option value="">Seleccione una orden</option>
+</select>
+<div class="row">
+<div>
+<label>Fecha del pago *</label>
+<input asp-for="Fecha" type="date" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+</div>
+<div>
+<label>Monto (USD) *</label>
+<input asp-for="Monto" type="number" step="0.01" placeholder="0.00" />
+</div>
+</div>
+<label>Método de pago *</label>
+<select asp-for="MetodoPago">
+<option>Efectivo</option>
+<option>Tarjeta</option>
+<option>Transferencia</option>
+</select>
+<small>Efectivo, Tarjeta o Transferencia</small>
+<div class="buttons">
+<button type="submit" class="btn-guardar">Guardar pago</button>
+<a href="/Pagos" class="btn-cancelar">Cancelar</a>
+</div>
+</form>
+</div>
+</div>
+</body>
+</html>
