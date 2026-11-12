@@ -1,15 +1,39 @@
+using Microsoft.EntityFrameworkCore;
+using TallerCardona.Data;
+using TallerCardona.Repositorios;
 using TallerCardona.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
 
-builder.Services.AddSingleton<IClienteRepositorio, ClienteRepositorioMemoria>();
-builder.Services.AddSingleton<IVehiculoRepositorio, VehiculoRepositorioMemoria>();
+// ===== Base de datos (Diego) =====
+// La cadena de conexión está en appsettings.json. Si su servidor se llama
+// distinto, usen "Administrar secretos de usuario" (ver el plan de trabajo).
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddScoped<IUnidadDeTrabajo, UnidadDeTrabajo>();
+
+// ===== Módulo Clientes (Diego) =====
+builder.Services.AddScoped<IClienteRepositorio, ClienteRepositorio>();
+builder.Services.AddScoped<IClienteService, ClienteService>();
+
+// ===== Módulo Vehículos (Kimberly) =====
+// TEMPORAL: la versión en memoria usa su propia lista de clientes.
+// Kimberly reemplaza estas líneas por VehiculoRepositorio y VehiculoService.
+builder.Services.AddSingleton<IVehiculoRepositorio>(_ =>
+    new VehiculoRepositorioMemoria(new ClienteRepositorioMemoria()));
+
+// ===== Módulo Órdenes de trabajo (Ariel) =====
 builder.Services.AddSingleton<IOrdenTrabajoRepositorio, OrdenTrabajoRepositorioMemoria>();
+
+// ===== Módulo Presupuestos y catálogo (Andrea) =====
 builder.Services.AddSingleton<IPresupuestoRepositorio, PresupuestoRepositorioMemoria>();
 builder.Services.AddSingleton<IServicioRepositorio, ServicioRepositorioMemoria>();
 builder.Services.AddSingleton<IRepuestoRepositorio, RepuestoRepositorioMemoria>();
+
+// ===== Módulo Pagos (Carlos) =====
+// Aquí van IPagoRepositorio / PagoRepositorio e IPagoService / PagoService
 
 var app = builder.Build();
 
