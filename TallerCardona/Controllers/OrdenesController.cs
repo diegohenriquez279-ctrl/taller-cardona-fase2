@@ -16,12 +16,14 @@ public class OrdenesController : Controller
         _ordenService = ordenService;
     }
 
-    // GET: /Ordenes?busqueda=hilux&estado=EnReparacion
-    public IActionResult Index(string? busqueda, EstadoOrden? estado)
+    // GET: /Ordenes?busqueda=hilux&estado=EnReparacion&desde=2026-11-01&hasta=2026-11-30
+    public IActionResult Index(string? busqueda, EstadoOrden? estado, DateTime? desde, DateTime? hasta)
     {
         ViewData["Busqueda"] = busqueda;
+        ViewData["Desde"] = desde?.ToString("yyyy-MM-dd");
+        ViewData["Hasta"] = hasta?.ToString("yyyy-MM-dd");
         CargarEstados(estado);
-        var ordenes = _ordenService.Listar(busqueda, estado);
+        var ordenes = _ordenService.Listar(busqueda, estado, desde, hasta);
         return View(ordenes);
     }
 

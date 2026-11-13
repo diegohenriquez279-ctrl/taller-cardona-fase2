@@ -5,7 +5,8 @@ namespace TallerCardona.Services;
 
 public interface IOrdenTrabajoService
 {
-    List<OrdenTrabajo> Listar(string? busqueda = null, EstadoOrden? estado = null);
+    List<OrdenTrabajo> Listar(string? busqueda = null, EstadoOrden? estado = null,
+        DateTime? desde = null, DateTime? hasta = null);
     OrdenTrabajo? ObtenerPorId(int id);
     List<ConteoPorEstado> ConteoPorEstado();
     List<Vehiculo> ListarVehiculos();

@@ -3,6 +3,8 @@
 @{
     ViewData["Title"] = "Órdenes de trabajo";
     var busqueda = ViewData["Busqueda"] as string;
+    var desde = ViewData["Desde"] as string;
+    var hasta = ViewData["Hasta"] as string;
     var estados = (List<SelectListItem>)ViewData["Estados"]!;
 }
 
@@ -23,15 +25,25 @@
     <div class="alert alert-danger">@error</div>
 }
 
-<form method="get" asp-action="Index" class="row g-2 mb-3">
-    <div class="col-sm-6 col-md-5">
-        <input type="text" name="busqueda" value="@busqueda" class="form-control"
-               placeholder="Buscar por número, placa, cliente o problema" />
+<form method="get" asp-action="Index" class="row g-2 mb-3 align-items-end">
+    <div class="col-md-4">
+        <label class="form-label small text-muted mb-1" for="busqueda">Buscar</label>
+        <input type="text" id="busqueda" name="busqueda" value="@busqueda" class="form-control"
+               placeholder="Número, placa, cliente o problema" />
     </div>
-    <div class="col-sm-4 col-md-3">
-        <select name="estado" class="form-select" asp-items="estados">
-            <option value="">Todos los estados</option>
+    <div class="col-sm-6 col-md-2">
+        <label class="form-label small text-muted mb-1" for="estado">Estado</label>
+        <select id="estado" name="estado" class="form-select" asp-items="estados">
+            <option value="">Todos</option>
         </select>
+    </div>
+    <div class="col-6 col-md-2">
+        <label class="form-label small text-muted mb-1" for="desde">Ingreso desde</label>
+        <input type="date" id="desde" name="desde" value="@desde" class="form-control" />
+    </div>
+    <div class="col-6 col-md-2">
+        <label class="form-label small text-muted mb-1" for="hasta">Ingreso hasta</label>
+        <input type="date" id="hasta" name="hasta" value="@hasta" class="form-control" />
     </div>
     <div class="col-auto">
         <button type="submit" class="btn btn-outline-secondary">Buscar</button>

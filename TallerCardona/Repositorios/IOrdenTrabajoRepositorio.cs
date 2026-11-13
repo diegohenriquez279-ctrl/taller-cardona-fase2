@@ -5,7 +5,8 @@ namespace TallerCardona.Repositorios;
 
 public interface IOrdenTrabajoRepositorio
 {
-    List<OrdenTrabajo> Listar(string? busqueda = null, EstadoOrden? estado = null);
+    List<OrdenTrabajo> Listar(string? busqueda = null, EstadoOrden? estado = null,
+        DateTime? desde = null, DateTime? hasta = null);
     OrdenTrabajo? ObtenerPorId(int id);
     List<ConteoPorEstado> ContarPorEstado();
     void Agregar(OrdenTrabajo orden);

@@ -19,8 +19,15 @@ public class OrdenTrabajoService : IOrdenTrabajoService
         _unidadDeTrabajo = unidadDeTrabajo;
     }
 
-    public List<OrdenTrabajo> Listar(string? busqueda = null, EstadoOrden? estado = null) =>
-        _repositorio.Listar(busqueda?.Trim(), estado);
+    public List<OrdenTrabajo> Listar(string? busqueda = null, EstadoOrden? estado = null,
+        DateTime? desde = null, DateTime? hasta = null)
+    {
+        // Si el usuario puso las fechas al revés, se intercambian
+        if (desde.HasValue && hasta.HasValue && desde > hasta)
+            (desde, hasta) = (hasta, desde);
+
+        return _repositorio.Listar(busqueda?.Trim(), estado, desde, hasta);
+    }
 
     public OrdenTrabajo? ObtenerPorId(int id) => _repositorio.ObtenerPorId(id);
 

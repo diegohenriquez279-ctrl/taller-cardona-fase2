@@ -16,8 +16,10 @@ public class OrdenTrabajoRepositorio : IOrdenTrabajoRepositorio
         _context = context;
     }
 
-    // Consulta con Include (trae el vehículo y su dueño), filtros (Where) y orden (OrderBy)
-    public List<OrdenTrabajo> Listar(string? busqueda = null, EstadoOrden? estado = null)
+    // Consulta con Include (trae el vehículo y su dueño), filtros (Where) y orden (OrderBy).
+    // desde/hasta filtran por rango de fecha de ingreso (los dos días incluidos).
+    public List<OrdenTrabajo> Listar(string? busqueda = null, EstadoOrden? estado = null,
+        DateTime? desde = null, DateTime? hasta = null)
     {
         var consulta = _context.OrdenesTrabajo
             .Include(o => o.Vehiculo)
@@ -26,6 +28,19 @@ public class OrdenTrabajoRepositorio : IOrdenTrabajoRepositorio
 
         if (estado.HasValue)
             consulta = consulta.Where(o => o.Estado == estado.Value);
+
+        if (desde.HasValue)
+        {
+            var inicio = desde.Value.Date;
+            consulta = consulta.Where(o => o.FechaIngreso >= inicio);
+        }
+
+        if (hasta.HasValue)
+        {
+            // "Hasta el 10" incluye todo el día 10: se compara con el inicio del día 11
+            var finExclusivo = hasta.Value.Date.AddDays(1);
+            consulta = consulta.Where(o => o.FechaIngreso < finExclusivo);
+        }
 
         if (!string.IsNullOrWhiteSpace(busqueda))
         {
