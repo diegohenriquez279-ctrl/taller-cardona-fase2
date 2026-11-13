@@ -25,6 +25,20 @@ public class OrdenTrabajoService : IOrdenTrabajoService
 
     public List<Vehiculo> ListarVehiculos() => _repositorio.ListarVehiculos();
 
+    // Regla: el estado avanza en orden
+    // Recibido → En diagnóstico → En reparación → Listo para entrega → Entregado.
+    // Se puede avanzar o regresar un solo paso (para corregir un error),
+    // no se pueden saltar etapas y una orden entregada ya no cambia.
+    public List<EstadoOrden> EstadosPermitidos(EstadoOrden estadoActual)
+    {
+        if (estadoActual == EstadoOrden.Entregado)
+            return new List<EstadoOrden> { estadoActual };
+
+        return Enum.GetValues<EstadoOrden>()
+            .Where(e => Math.Abs((int)e - (int)estadoActual) <= 1)
+            .ToList();
+    }
+
     public Resultado Crear(OrdenTrabajo orden)
     {
         // Regla: una orden necesita un vehículo que exista
@@ -56,6 +70,10 @@ public class OrdenTrabajoService : IOrdenTrabajoService
         if (!_repositorio.ExisteVehiculo(orden.VehiculoId))
             return Resultado.Error("Seleccione un vehículo registrado.");
 
+        var errorEstado = ValidarCambioDeEstado(existente.Estado, orden.Estado);
+        if (errorEstado is not null)
+            return Resultado.Error(errorEstado);
+
         orden.FechaEntrega = CalcularFechaEntrega(orden.Estado, existente.FechaEntrega);
 
         try
@@ -76,8 +94,12 @@ public class OrdenTrabajoService : IOrdenTrabajoService
         if (orden is null)
             return Resultado.Error("La orden no existe.");
 
-        if (!Enum.IsDefined(nuevoEstado))
-            return Resultado.Error("El estado indicado no es válido.");
+        var errorEstado = ValidarCambioDeEstado(orden.Estado, nuevoEstado);
+        if (errorEstado is not null)
+            return Resultado.Error(errorEstado);
+
+        if (orden.Estado == nuevoEstado)
+            return Resultado.Ok($"La orden #{id} ya está en «{nuevoEstado.Nombre()}».");
 
         try
         {
@@ -115,6 +137,21 @@ public class OrdenTrabajoService : IOrdenTrabajoService
         {
             return Resultado.Error("No se pudo eliminar la orden. Intente de nuevo.");
         }
+    }
+
+    // Devuelve el mensaje de error si el cambio no está permitido, o null si sí.
+    private string? ValidarCambioDeEstado(EstadoOrden actual, EstadoOrden nuevo)
+    {
+        if (!Enum.IsDefined(nuevo))
+            return "El estado indicado no es válido.";
+
+        if (actual == EstadoOrden.Entregado && nuevo != actual)
+            return "La orden ya fue entregada y su estado no se puede cambiar.";
+
+        if (!EstadosPermitidos(actual).Contains(nuevo))
+            return $"No se puede pasar de «{actual.Nombre()}» a «{nuevo.Nombre()}»: el estado avanza un paso a la vez.";
+
+        return null;
     }
 
     // Regla: cuando la orden pasa a "Entregado" se llena la fecha de entrega

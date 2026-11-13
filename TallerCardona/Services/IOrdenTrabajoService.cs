@@ -7,6 +7,7 @@ public interface IOrdenTrabajoService
     List<OrdenTrabajo> Listar(string? busqueda = null, EstadoOrden? estado = null);
     OrdenTrabajo? ObtenerPorId(int id);
     List<Vehiculo> ListarVehiculos();
+    List<EstadoOrden> EstadosPermitidos(EstadoOrden estadoActual);
     Resultado Crear(OrdenTrabajo orden);
     Resultado Actualizar(OrdenTrabajo orden);
     Resultado CambiarEstado(int id, EstadoOrden nuevoEstado);

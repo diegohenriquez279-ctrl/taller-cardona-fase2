@@ -37,6 +37,7 @@ public class OrdenesController : Controller
     {
         var orden = _ordenService.ObtenerPorId(id);
         if (orden is null) return NotFound();
+        ViewData["EstadosPermitidos"] = _ordenService.EstadosPermitidos(orden.Estado);
         return View(orden);
     }
 
@@ -75,7 +76,7 @@ public class OrdenesController : Controller
     {
         var orden = _ordenService.ObtenerPorId(id);
         if (orden is null) return NotFound();
-        CargarListas(orden.VehiculoId, orden.Estado);
+        CargarListas(orden.VehiculoId, orden.Estado, orden.Estado);
         return View(orden);
     }
 
@@ -85,9 +86,12 @@ public class OrdenesController : Controller
     public IActionResult Edit(int id, OrdenTrabajo orden)
     {
         if (id != orden.Id) return NotFound();
+        var estadoGuardado = _ordenService.ObtenerPorId(id)?.Estado;
+        if (estadoGuardado is null) return NotFound();
+
         if (!ModelState.IsValid)
         {
-            CargarListas(orden.VehiculoId, orden.Estado);
+            CargarListas(orden.VehiculoId, orden.Estado, estadoGuardado);
             return View(orden);
         }
 
@@ -95,7 +99,7 @@ public class OrdenesController : Controller
         if (!resultado.Exito)
         {
             ModelState.AddModelError(string.Empty, resultado.Mensaje);
-            CargarListas(orden.VehiculoId, orden.Estado);
+            CargarListas(orden.VehiculoId, orden.Estado, estadoGuardado);
             return View(orden);
         }
 
@@ -133,7 +137,9 @@ public class OrdenesController : Controller
         return RedirectToAction(nameof(Index));
     }
 
-    private void CargarListas(int? vehiculoSeleccionado, EstadoOrden estadoSeleccionado)
+    // estadoBase: el estado que tiene la orden guardada (null si es nueva).
+    // Solo se ofrecen los estados a los que la orden puede pasar.
+    private void CargarListas(int? vehiculoSeleccionado, EstadoOrden estadoSeleccionado, EstadoOrden? estadoBase = null)
     {
         var vehiculos = _ordenService.ListarVehiculos()
             .Select(v => new
@@ -143,7 +149,13 @@ public class OrdenesController : Controller
                         (v.Cliente is null ? "" : $" ({v.Cliente.Nombre})")
             });
         ViewData["Vehiculos"] = new SelectList(vehiculos, "Id", "Texto", vehiculoSeleccionado);
-        CargarEstados(estadoSeleccionado);
+
+        var permitidos = estadoBase is null
+            ? new List<EstadoOrden> { EstadoOrden.Recibido }
+            : _ordenService.EstadosPermitidos(estadoBase.Value);
+        ViewData["Estados"] = permitidos
+            .Select(e => new SelectListItem(e.Nombre(), e.ToString(), e == estadoSeleccionado))
+            .ToList();
     }
 
     private void CargarEstados(EstadoOrden? seleccionado)
