@@ -70,12 +70,6 @@ public class OrdenTrabajoRepositorio : IOrdenTrabajoRepositorio
         _context.Entry(existente).CurrentValues.SetValues(orden);
     }
 
-    public void CambiarEstado(int id, EstadoOrden estado)
-    {
-        var orden = _context.OrdenesTrabajo.Find(id);
-        if (orden is not null) orden.Estado = estado;
-    }
-
     public void Eliminar(int id)
     {
         var orden = _context.OrdenesTrabajo.Find(id);

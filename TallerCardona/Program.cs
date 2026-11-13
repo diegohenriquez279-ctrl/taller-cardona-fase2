@@ -26,6 +26,7 @@ builder.Services.AddSingleton<IVehiculoRepositorio>(_ =>
 
 // ===== Módulo Órdenes de trabajo (Ariel) =====
 builder.Services.AddScoped<IOrdenTrabajoRepositorio, OrdenTrabajoRepositorio>();
+builder.Services.AddScoped<IOrdenTrabajoService, OrdenTrabajoService>();
 
 // ===== Módulo Presupuestos y catálogo (Andrea) =====
 builder.Services.AddSingleton<IPresupuestoRepositorio, PresupuestoRepositorioMemoria>();

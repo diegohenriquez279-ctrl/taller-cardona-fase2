@@ -1,17 +1,19 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using TallerCardona.Models;
-using TallerCardona.Repositorios;
+using TallerCardona.Services;
 
 namespace TallerCardona.Controllers;
 
+// Controlador de órdenes: recibe lo que manda la vista, llama al servicio
+// y decide qué vista mostrar. Ya no habla directo con el repositorio.
 public class OrdenesController : Controller
 {
-    private readonly IOrdenTrabajoRepositorio _repositorio;
+    private readonly IOrdenTrabajoService _ordenService;
 
-    public OrdenesController(IOrdenTrabajoRepositorio repositorio)
+    public OrdenesController(IOrdenTrabajoService ordenService)
     {
-        _repositorio = repositorio;
+        _ordenService = ordenService;
     }
 
     // GET: /Ordenes?busqueda=hilux&estado=EnReparacion
@@ -19,21 +21,21 @@ public class OrdenesController : Controller
     {
         ViewData["Busqueda"] = busqueda;
         CargarEstados(estado);
-        var ordenes = _repositorio.Listar(busqueda, estado);
+        var ordenes = _ordenService.Listar(busqueda, estado);
         return View(ordenes);
     }
 
     // GET: /Ordenes/Tablero
     public IActionResult Tablero()
     {
-        var ordenes = _repositorio.Listar();
+        var ordenes = _ordenService.Listar();
         return View(ordenes);
     }
 
     // GET: /Ordenes/Details/1
     public IActionResult Details(int id)
     {
-        var orden = _repositorio.ObtenerPorId(id);
+        var orden = _ordenService.ObtenerPorId(id);
         if (orden is null) return NotFound();
         return View(orden);
     }
@@ -56,15 +58,22 @@ public class OrdenesController : Controller
             return View(orden);
         }
 
-        _repositorio.Agregar(orden);
-        TempData["Mensaje"] = "Orden de trabajo registrada correctamente.";
+        var resultado = _ordenService.Crear(orden);
+        if (!resultado.Exito)
+        {
+            ModelState.AddModelError(string.Empty, resultado.Mensaje);
+            CargarListas(orden.VehiculoId, orden.Estado);
+            return View(orden);
+        }
+
+        TempData["Mensaje"] = resultado.Mensaje;
         return RedirectToAction(nameof(Index));
     }
 
     // GET: /Ordenes/Edit/1
     public IActionResult Edit(int id)
     {
-        var orden = _repositorio.ObtenerPorId(id);
+        var orden = _ordenService.ObtenerPorId(id);
         if (orden is null) return NotFound();
         CargarListas(orden.VehiculoId, orden.Estado);
         return View(orden);
@@ -82,8 +91,15 @@ public class OrdenesController : Controller
             return View(orden);
         }
 
-        _repositorio.Actualizar(orden);
-        TempData["Mensaje"] = "Orden de trabajo actualizada correctamente.";
+        var resultado = _ordenService.Actualizar(orden);
+        if (!resultado.Exito)
+        {
+            ModelState.AddModelError(string.Empty, resultado.Mensaje);
+            CargarListas(orden.VehiculoId, orden.Estado);
+            return View(orden);
+        }
+
+        TempData["Mensaje"] = resultado.Mensaje;
         return RedirectToAction(nameof(Index));
     }
 
@@ -92,12 +108,8 @@ public class OrdenesController : Controller
     [ValidateAntiForgeryToken]
     public IActionResult CambiarEstado(int id, EstadoOrden estado, string? volverA)
     {
-        var orden = _repositorio.ObtenerPorId(id);
-        if (orden is null) return NotFound();
-        if (!Enum.IsDefined(estado)) return BadRequest();
-
-        _repositorio.CambiarEstado(id, estado);
-        TempData["Mensaje"] = $"La orden #{id} pasó a «{estado.Nombre()}».";
+        var resultado = _ordenService.CambiarEstado(id, estado);
+        TempData[resultado.Exito ? "Mensaje" : "Error"] = resultado.Mensaje;
 
         if (volverA == nameof(Details)) return RedirectToAction(nameof(Details), new { id });
         return RedirectToAction(nameof(Tablero));
@@ -106,7 +118,7 @@ public class OrdenesController : Controller
     // GET: /Ordenes/Delete/1
     public IActionResult Delete(int id)
     {
-        var orden = _repositorio.ObtenerPorId(id);
+        var orden = _ordenService.ObtenerPorId(id);
         if (orden is null) return NotFound();
         return View(orden);
     }
@@ -116,14 +128,14 @@ public class OrdenesController : Controller
     [ValidateAntiForgeryToken]
     public IActionResult DeleteConfirmed(int id)
     {
-        _repositorio.Eliminar(id);
-        TempData["Mensaje"] = "Orden de trabajo eliminada.";
+        var resultado = _ordenService.Eliminar(id);
+        TempData[resultado.Exito ? "Mensaje" : "Error"] = resultado.Mensaje;
         return RedirectToAction(nameof(Index));
     }
 
     private void CargarListas(int? vehiculoSeleccionado, EstadoOrden estadoSeleccionado)
     {
-        var vehiculos = _repositorio.ListarVehiculos()
+        var vehiculos = _ordenService.ListarVehiculos()
             .Select(v => new
             {
                 v.Id,

@@ -8,7 +8,6 @@ public interface IOrdenTrabajoRepositorio
     OrdenTrabajo? ObtenerPorId(int id);
     void Agregar(OrdenTrabajo orden);
     void Actualizar(OrdenTrabajo orden);
-    void CambiarEstado(int id, EstadoOrden estado);
     void Eliminar(int id);
     List<Vehiculo> ListarVehiculos();
     bool ExisteVehiculo(int vehiculoId);
