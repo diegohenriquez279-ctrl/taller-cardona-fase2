@@ -1,4 +1,5 @@
 using TallerCardona.Models;
+using TallerCardona.Models.Reportes;
 
 namespace TallerCardona.Repositorios;
 
@@ -6,6 +7,7 @@ public interface IOrdenTrabajoRepositorio
 {
     List<OrdenTrabajo> Listar(string? busqueda = null, EstadoOrden? estado = null);
     OrdenTrabajo? ObtenerPorId(int id);
+    List<ConteoPorEstado> ContarPorEstado();
     void Agregar(OrdenTrabajo orden);
     void Actualizar(OrdenTrabajo orden);
     void Eliminar(int id);

@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using TallerCardona.Data;
 using TallerCardona.Models;
+using TallerCardona.Models.Reportes;
 
 namespace TallerCardona.Repositorios;
 
@@ -58,6 +59,19 @@ public class OrdenTrabajoRepositorio : IOrdenTrabajoRepositorio
             .Include(o => o.Presupuesto)
             .Include(o => o.Pagos)
             .FirstOrDefault(o => o.Id == id);
+
+    // Consulta con agrupación (GroupBy) para el tablero:
+    // junta las órdenes por estado y cuenta cuántas hay en cada grupo.
+    // SQL Server la ejecuta como SELECT Estado, COUNT(*) ... GROUP BY Estado.
+    public List<ConteoPorEstado> ContarPorEstado() =>
+        _context.OrdenesTrabajo
+            .GroupBy(o => o.Estado)
+            .Select(g => new ConteoPorEstado
+            {
+                Estado = g.Key,
+                Cantidad = g.Count()
+            })
+            .ToList();
 
     public void Agregar(OrdenTrabajo orden) => _context.OrdenesTrabajo.Add(orden);
 

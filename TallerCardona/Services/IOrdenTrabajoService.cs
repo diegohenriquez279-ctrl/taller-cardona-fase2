@@ -1,4 +1,5 @@
 using TallerCardona.Models;
+using TallerCardona.Models.Reportes;
 
 namespace TallerCardona.Services;
 
@@ -6,6 +7,7 @@ public interface IOrdenTrabajoService
 {
     List<OrdenTrabajo> Listar(string? busqueda = null, EstadoOrden? estado = null);
     OrdenTrabajo? ObtenerPorId(int id);
+    List<ConteoPorEstado> ConteoPorEstado();
     List<Vehiculo> ListarVehiculos();
     List<EstadoOrden> EstadosPermitidos(EstadoOrden estadoActual);
     List<Servicio> ListarServiciosActivos();

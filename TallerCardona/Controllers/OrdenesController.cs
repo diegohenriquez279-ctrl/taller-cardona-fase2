@@ -29,6 +29,7 @@ public class OrdenesController : Controller
     public IActionResult Tablero()
     {
         var ordenes = _ordenService.Listar();
+        ViewData["Conteo"] = _ordenService.ConteoPorEstado();
         return View(ordenes);
     }
 

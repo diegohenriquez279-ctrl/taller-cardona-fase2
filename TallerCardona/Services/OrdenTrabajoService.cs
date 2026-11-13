@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using TallerCardona.Data;
 using TallerCardona.Models;
+using TallerCardona.Models.Reportes;
 using TallerCardona.Repositorios;
 
 namespace TallerCardona.Services;
@@ -22,6 +23,21 @@ public class OrdenTrabajoService : IOrdenTrabajoService
         _repositorio.Listar(busqueda?.Trim(), estado);
 
     public OrdenTrabajo? ObtenerPorId(int id) => _repositorio.ObtenerPorId(id);
+
+    // La base solo devuelve los estados que tienen órdenes; aquí se completan
+    // los que faltan con 0 para que el tablero muestre siempre las 5 columnas.
+    public List<ConteoPorEstado> ConteoPorEstado()
+    {
+        var conteo = _repositorio.ContarPorEstado();
+
+        return Enum.GetValues<EstadoOrden>()
+            .Select(estado => new ConteoPorEstado
+            {
+                Estado = estado,
+                Cantidad = conteo.FirstOrDefault(c => c.Estado == estado)?.Cantidad ?? 0
+            })
+            .ToList();
+    }
 
     public List<Vehiculo> ListarVehiculos() => _repositorio.ListarVehiculos();
 
