@@ -1,7 +1,7 @@
 @model OrdenTrabajo
 @{
     ViewData["Title"] = "Detalle de la orden";
-    var todosLosEstados = Enum.GetValues<EstadoOrden>();
+    var estadosPermitidos = (List<EstadoOrden>)ViewData["EstadosPermitidos"]!;
     var totalServicios = Model.Servicios.Sum(s => s.Subtotal);
     var totalRepuestos = Model.Repuestos.Sum(r => r.Subtotal);
 }
@@ -9,6 +9,10 @@
 @if (TempData["Mensaje"] is string mensaje)
 {
     <div class="alert alert-success">@mensaje</div>
+}
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger">@error</div>
 }
 
 <h1 class="h3 mb-3">
@@ -79,20 +83,27 @@
     <dd class="col-sm-9">@((totalServicios + totalRepuestos).ToString("C"))</dd>
 </dl>
 
-<form asp-action="CambiarEstado" asp-route-id="@Model.Id" method="post" class="row g-2 mb-3">
-    <input type="hidden" name="volverA" value="Details" />
-    <div class="col-sm-6 col-md-4">
-        <select name="estado" class="form-select">
-            @foreach (var e in todosLosEstados)
-            {
-                <option value="@e" selected="@(e == Model.Estado)">@e.Nombre()</option>
-            }
-        </select>
-    </div>
-    <div class="col-auto">
-        <button type="submit" class="btn btn-outline-primary">Cambiar estado</button>
-    </div>
-</form>
+@if (Model.Estado == EstadoOrden.Entregado)
+{
+    <p class="text-muted">La orden ya fue entregada; su estado no se puede cambiar.</p>
+}
+else
+{
+    <form asp-action="CambiarEstado" asp-route-id="@Model.Id" method="post" class="row g-2 mb-3">
+        <input type="hidden" name="volverA" value="Details" />
+        <div class="col-sm-6 col-md-4">
+            <select name="estado" class="form-select">
+                @foreach (var e in estadosPermitidos)
+                {
+                    <option value="@e" selected="@(e == Model.Estado)">@e.Nombre()</option>
+                }
+            </select>
+        </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-outline-primary">Cambiar estado</button>
+        </div>
+    </form>
+}
 
 <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Editar</a>
 <a asp-action="Tablero" class="btn btn-outline-secondary">Ver tablero</a>

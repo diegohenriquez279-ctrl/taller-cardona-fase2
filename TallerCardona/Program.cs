@@ -25,7 +25,8 @@ builder.Services.AddSingleton<IVehiculoRepositorio>(_ =>
     new VehiculoRepositorioMemoria(new ClienteRepositorioMemoria()));
 
 // ===== Módulo Órdenes de trabajo (Ariel) =====
-builder.Services.AddSingleton<IOrdenTrabajoRepositorio, OrdenTrabajoRepositorioMemoria>();
+builder.Services.AddScoped<IOrdenTrabajoRepositorio, OrdenTrabajoRepositorio>();
+builder.Services.AddScoped<IOrdenTrabajoService, OrdenTrabajoService>();
 
 // ===== Módulo Presupuestos y catálogo (Andrea) =====
 builder.Services.AddSingleton<IPresupuestoRepositorio, PresupuestoRepositorioMemoria>();
