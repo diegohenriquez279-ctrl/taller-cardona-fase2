@@ -42,14 +42,14 @@ public class PresupuestosController : Controller
         if (orden is null)
         {
             TempData["Error"] = "No se encontró la orden de trabajo.";
-            return RedirectToAction("Index", "OrdenesTrabajo");
+            return RedirectToAction("Index", "Ordenes");
         }
 
         if (orden.Presupuesto is not null ||
             _presupuestos.Listar().Any(p => p.OrdenTrabajoId == orden.Id))
         {
             TempData["Error"] = "Esta orden ya tiene un presupuesto.";
-            return RedirectToAction("Index", "OrdenesTrabajo");
+            return RedirectToAction("Index", "Ordenes");
         }
 
         var totalServicios = orden.Servicios.Sum(s => s.Subtotal);
@@ -61,7 +61,7 @@ public class PresupuestosController : Controller
             TempData["Error"] =
                 "No se puede crear un presupuesto de cero. Verifique los servicios y repuestos de la orden.";
 
-            return RedirectToAction("Details", "OrdenesTrabajo",
+            return RedirectToAction("Details", "Ordenes",
                 new { id = orden.Id });
         }
 

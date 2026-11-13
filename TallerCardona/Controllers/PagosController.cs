@@ -44,7 +44,7 @@ public class PagosController : Controller
         if (orden is null)
         {
             TempData["Error"] = "No se encontró la orden de trabajo.";
-            return RedirectToAction("Index", "OrdenesTrabajo");
+            return RedirectToAction("Index", "Ordenes");
         }
 
         var presupuesto = _presupuestos.Listar()
@@ -53,7 +53,7 @@ public class PagosController : Controller
         if (presupuesto is null || presupuesto.Estado != EstadoPresupuesto.Autorizado)
         {
             TempData["Error"] = "Solo se pueden registrar pagos de órdenes con presupuesto Autorizado.";
-            return RedirectToAction("Index", "OrdenesTrabajo");
+            return RedirectToAction("Index", "Ordenes");
         }
 
         var yaPagado = _pagos.Listar()
@@ -81,7 +81,7 @@ public class PagosController : Controller
         if (orden is null)
         {
             TempData["Error"] = "No se encontró la orden de trabajo.";
-            return RedirectToAction("Index", "OrdenesTrabajo");
+            return RedirectToAction("Index", "Ordenes");
         }
 
         var presupuesto = _presupuestos.Listar()
@@ -90,7 +90,7 @@ public class PagosController : Controller
         if (presupuesto is null || presupuesto.Estado != EstadoPresupuesto.Autorizado)
         {
             TempData["Error"] = "Solo se pueden registrar pagos de órdenes con presupuesto Autorizado.";
-            return RedirectToAction("Index", "OrdenesTrabajo");
+            return RedirectToAction("Index", "Ordenes");
         }
 
        
