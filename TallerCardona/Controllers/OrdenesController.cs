@@ -44,26 +44,31 @@ public class OrdenesController : Controller
     // GET: /Ordenes/Create
     public IActionResult Create()
     {
-        CargarListas(null, EstadoOrden.Recibido);
-        return View(new OrdenTrabajo());
+        var orden = new OrdenTrabajo();
+        CargarListas(orden, null, Array.Empty<int>(), Array.Empty<int>());
+        return View(orden);
     }
 
     // POST: /Ordenes/Create
+    // servicioIds y repuestoIds son las casillas marcadas en el formulario.
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public IActionResult Create(OrdenTrabajo orden)
+    public IActionResult Create(OrdenTrabajo orden, int[]? servicioIds, int[]? repuestoIds)
     {
+        servicioIds ??= Array.Empty<int>();
+        repuestoIds ??= Array.Empty<int>();
+
         if (!ModelState.IsValid)
         {
-            CargarListas(orden.VehiculoId, orden.Estado);
+            CargarListas(orden, null, servicioIds, repuestoIds);
             return View(orden);
         }
 
-        var resultado = _ordenService.Crear(orden);
+        var resultado = _ordenService.Crear(orden, servicioIds, repuestoIds);
         if (!resultado.Exito)
         {
             ModelState.AddModelError(string.Empty, resultado.Mensaje);
-            CargarListas(orden.VehiculoId, orden.Estado);
+            CargarListas(orden, null, servicioIds, repuestoIds);
             return View(orden);
         }
 
@@ -76,30 +81,35 @@ public class OrdenesController : Controller
     {
         var orden = _ordenService.ObtenerPorId(id);
         if (orden is null) return NotFound();
-        CargarListas(orden.VehiculoId, orden.Estado, orden.Estado);
+        CargarListas(orden, orden,
+            orden.Servicios.Select(d => d.ServicioId),
+            orden.Repuestos.Select(d => d.RepuestoId));
         return View(orden);
     }
 
     // POST: /Ordenes/Edit/1
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public IActionResult Edit(int id, OrdenTrabajo orden)
+    public IActionResult Edit(int id, OrdenTrabajo orden, int[]? servicioIds, int[]? repuestoIds)
     {
         if (id != orden.Id) return NotFound();
-        var estadoGuardado = _ordenService.ObtenerPorId(id)?.Estado;
-        if (estadoGuardado is null) return NotFound();
+        var guardada = _ordenService.ObtenerPorId(id);
+        if (guardada is null) return NotFound();
+
+        servicioIds ??= Array.Empty<int>();
+        repuestoIds ??= Array.Empty<int>();
 
         if (!ModelState.IsValid)
         {
-            CargarListas(orden.VehiculoId, orden.Estado, estadoGuardado);
+            CargarListas(orden, guardada, servicioIds, repuestoIds);
             return View(orden);
         }
 
-        var resultado = _ordenService.Actualizar(orden);
+        var resultado = _ordenService.Actualizar(orden, servicioIds, repuestoIds);
         if (!resultado.Exito)
         {
             ModelState.AddModelError(string.Empty, resultado.Mensaje);
-            CargarListas(orden.VehiculoId, orden.Estado, estadoGuardado);
+            CargarListas(orden, guardada, servicioIds, repuestoIds);
             return View(orden);
         }
 
@@ -135,6 +145,28 @@ public class OrdenesController : Controller
         var resultado = _ordenService.Eliminar(id);
         TempData[resultado.Exito ? "Mensaje" : "Error"] = resultado.Mensaje;
         return RedirectToAction(nameof(Index));
+    }
+
+    // Llena las listas del formulario: vehículos, estados, servicios y repuestos.
+    // guardada: la orden tal como está en la base (null si es nueva).
+    private void CargarListas(OrdenTrabajo orden, OrdenTrabajo? guardada,
+        IEnumerable<int> serviciosMarcados, IEnumerable<int> repuestosMarcados)
+    {
+        CargarListas(orden.VehiculoId, orden.Estado, guardada?.Estado);
+
+        // Los servicios activos más los que la orden ya tenía (aunque luego se hayan desactivado)
+        var servicios = _ordenService.ListarServiciosActivos();
+        if (guardada is not null)
+        {
+            servicios.AddRange(guardada.Servicios
+                .Where(d => d.Servicio is not null && !servicios.Any(s => s.Id == d.ServicioId))
+                .Select(d => d.Servicio!));
+        }
+
+        ViewData["Servicios"] = servicios;
+        ViewData["Repuestos"] = _ordenService.ListarRepuestos();
+        ViewData["ServiciosMarcados"] = serviciosMarcados.ToList();
+        ViewData["RepuestosMarcados"] = repuestosMarcados.ToList();
     }
 
     // estadoBase: el estado que tiene la orden guardada (null si es nueva).

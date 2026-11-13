@@ -39,15 +39,25 @@ public class OrdenTrabajoService : IOrdenTrabajoService
             .ToList();
     }
 
-    public Resultado Crear(OrdenTrabajo orden)
+    public List<Servicio> ListarServiciosActivos() => _repositorio.ListarServiciosActivos();
+
+    public List<Repuesto> ListarRepuestos() => _repositorio.ListarRepuestos();
+
+    public Resultado Crear(OrdenTrabajo orden, IEnumerable<int> servicioIds, IEnumerable<int> repuestoIds)
     {
         // Regla: una orden necesita un vehículo que exista
         if (!_repositorio.ExisteVehiculo(orden.VehiculoId))
             return Resultado.Error("Seleccione un vehículo registrado.");
 
+        var error = ArmarDetalles(null, servicioIds, repuestoIds, out var servicios, out var repuestos);
+        if (error is not null)
+            return Resultado.Error(error);
+
         // Toda orden nueva empieza en "Recibido" y todavía no tiene fecha de entrega
         orden.Estado = EstadoOrden.Recibido;
         orden.FechaEntrega = null;
+        orden.Servicios = servicios;
+        orden.Repuestos = repuestos;
 
         try
         {
@@ -61,7 +71,7 @@ public class OrdenTrabajoService : IOrdenTrabajoService
         }
     }
 
-    public Resultado Actualizar(OrdenTrabajo orden)
+    public Resultado Actualizar(OrdenTrabajo orden, IEnumerable<int> servicioIds, IEnumerable<int> repuestoIds)
     {
         var existente = _repositorio.ObtenerPorId(orden.Id);
         if (existente is null)
@@ -74,11 +84,16 @@ public class OrdenTrabajoService : IOrdenTrabajoService
         if (errorEstado is not null)
             return Resultado.Error(errorEstado);
 
+        var error = ArmarDetalles(existente, servicioIds, repuestoIds, out var servicios, out var repuestos);
+        if (error is not null)
+            return Resultado.Error(error);
+
         orden.FechaEntrega = CalcularFechaEntrega(orden.Estado, existente.FechaEntrega);
 
         try
         {
             _repositorio.Actualizar(orden);
+            _repositorio.ReemplazarDetalles(existente, servicios, repuestos);
             _unidadDeTrabajo.Guardar();
             return Resultado.Ok("Orden de trabajo actualizada correctamente.");
         }
@@ -137,6 +152,57 @@ public class OrdenTrabajoService : IOrdenTrabajoService
         {
             return Resultado.Error("No se pudo eliminar la orden. Intente de nuevo.");
         }
+    }
+
+    // Convierte los servicios y repuestos marcados en el formulario en líneas
+    // de detalle con el precio del catálogo. Devuelve un mensaje si algo no es válido.
+    // Regla: un servicio desactivado no se puede agregar (salvo que la orden ya lo tuviera).
+    private string? ArmarDetalles(
+        OrdenTrabajo? existente,
+        IEnumerable<int> servicioIds,
+        IEnumerable<int> repuestoIds,
+        out List<DetalleServicio> servicios,
+        out List<DetalleRepuesto> repuestos)
+    {
+        servicios = new List<DetalleServicio>();
+        repuestos = new List<DetalleRepuesto>();
+
+        var catalogoServicios = _repositorio.ListarServiciosActivos();
+        var catalogoRepuestos = _repositorio.ListarRepuestos();
+
+        foreach (var id in servicioIds.Distinct())
+        {
+            var yaEnLaOrden = existente?.Servicios.FirstOrDefault(d => d.ServicioId == id);
+            var servicio = catalogoServicios.FirstOrDefault(s => s.Id == id);
+
+            if (yaEnLaOrden is null && servicio is null)
+                return "Uno de los servicios seleccionados no está disponible.";
+
+            servicios.Add(yaEnLaOrden ?? new DetalleServicio
+            {
+                ServicioId = servicio!.Id,
+                Cantidad = 1,
+                PrecioUnitario = servicio.PrecioBase
+            });
+        }
+
+        foreach (var id in repuestoIds.Distinct())
+        {
+            var yaEnLaOrden = existente?.Repuestos.FirstOrDefault(d => d.RepuestoId == id);
+            var repuesto = catalogoRepuestos.FirstOrDefault(r => r.Id == id);
+
+            if (yaEnLaOrden is null && repuesto is null)
+                return "Uno de los repuestos seleccionados no está disponible.";
+
+            repuestos.Add(yaEnLaOrden ?? new DetalleRepuesto
+            {
+                RepuestoId = repuesto!.Id,
+                Cantidad = 1,
+                PrecioUnitario = repuesto.Precio
+            });
+        }
+
+        return null;
     }
 
     // Devuelve el mensaje de error si el cambio no está permitido, o null si sí.

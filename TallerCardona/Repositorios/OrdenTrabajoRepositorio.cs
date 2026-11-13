@@ -84,4 +84,38 @@ public class OrdenTrabajoRepositorio : IOrdenTrabajoRepositorio
 
     public bool ExisteVehiculo(int vehiculoId) =>
         _context.Vehiculos.Any(v => v.Id == vehiculoId);
+
+    // Catálogo para armar la orden. Solo los servicios activos se pueden elegir.
+    public List<Servicio> ListarServiciosActivos() =>
+        _context.Servicios
+            .Where(s => s.Activo)
+            .OrderBy(s => s.Nombre)
+            .ToList();
+
+    public List<Repuesto> ListarRepuestos() =>
+        _context.Repuestos
+            .OrderBy(r => r.Nombre)
+            .ToList();
+
+    // Deja en la orden exactamente los servicios y repuestos indicados:
+    // borra los que se quitaron y agrega los nuevos. Los que se mantienen
+    // conservan el precio con el que se registraron.
+    public void ReemplazarDetalles(OrdenTrabajo orden, List<DetalleServicio> servicios, List<DetalleRepuesto> repuestos)
+    {
+        var serviciosQuitados = orden.Servicios
+            .Where(d => !servicios.Any(n => n.ServicioId == d.ServicioId))
+            .ToList();
+        _context.DetallesServicio.RemoveRange(serviciosQuitados);
+
+        foreach (var nuevo in servicios.Where(n => !orden.Servicios.Any(d => d.ServicioId == n.ServicioId)))
+            orden.Servicios.Add(nuevo);
+
+        var repuestosQuitados = orden.Repuestos
+            .Where(d => !repuestos.Any(n => n.RepuestoId == d.RepuestoId))
+            .ToList();
+        _context.DetallesRepuesto.RemoveRange(repuestosQuitados);
+
+        foreach (var nuevo in repuestos.Where(n => !orden.Repuestos.Any(d => d.RepuestoId == n.RepuestoId)))
+            orden.Repuestos.Add(nuevo);
+    }
 }

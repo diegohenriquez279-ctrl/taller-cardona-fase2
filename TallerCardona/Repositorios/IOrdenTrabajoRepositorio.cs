@@ -11,4 +11,7 @@ public interface IOrdenTrabajoRepositorio
     void Eliminar(int id);
     List<Vehiculo> ListarVehiculos();
     bool ExisteVehiculo(int vehiculoId);
+    List<Servicio> ListarServiciosActivos();
+    List<Repuesto> ListarRepuestos();
+    void ReemplazarDetalles(OrdenTrabajo orden, List<DetalleServicio> servicios, List<DetalleRepuesto> repuestos);
 }

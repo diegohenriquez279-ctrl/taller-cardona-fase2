@@ -8,8 +8,10 @@ public interface IOrdenTrabajoService
     OrdenTrabajo? ObtenerPorId(int id);
     List<Vehiculo> ListarVehiculos();
     List<EstadoOrden> EstadosPermitidos(EstadoOrden estadoActual);
-    Resultado Crear(OrdenTrabajo orden);
-    Resultado Actualizar(OrdenTrabajo orden);
+    List<Servicio> ListarServiciosActivos();
+    List<Repuesto> ListarRepuestos();
+    Resultado Crear(OrdenTrabajo orden, IEnumerable<int> servicioIds, IEnumerable<int> repuestoIds);
+    Resultado Actualizar(OrdenTrabajo orden, IEnumerable<int> servicioIds, IEnumerable<int> repuestoIds);
     Resultado CambiarEstado(int id, EstadoOrden nuevoEstado);
     Resultado Eliminar(int id);
 }
