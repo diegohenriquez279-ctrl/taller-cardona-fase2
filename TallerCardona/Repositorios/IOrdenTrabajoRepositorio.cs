@@ -11,4 +11,5 @@ public interface IOrdenTrabajoRepositorio
     void CambiarEstado(int id, EstadoOrden estado);
     void Eliminar(int id);
     List<Vehiculo> ListarVehiculos();
+    bool ExisteVehiculo(int vehiculoId);
 }
