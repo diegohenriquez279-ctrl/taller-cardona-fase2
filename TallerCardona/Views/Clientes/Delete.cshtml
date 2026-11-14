@@ -5,6 +5,11 @@
 
 <h1 class="h3 mb-3">Eliminar cliente</h1>
 
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger">@error</div>
+}
+
 <div class="alert alert-warning">
     ¿Seguro que desea eliminar a <strong>@Model.Nombre</strong> (@Model.Telefono)? Esta acción no se puede deshacer.
 </div>

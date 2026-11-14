@@ -1,0 +1,16 @@
+@model OrdenTrabajo
+@{
+    ViewData["Title"] = "Editar orden de trabajo";
+}
+
+<h1 class="h3 mb-3">Editar orden #@Model.Id</h1>
+
+<form asp-action="Edit" asp-route-id="@Model.Id" method="post">
+    <partial name="_FormularioOrden" model="Model" />
+    <button type="submit" class="btn btn-primary">Guardar cambios</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
