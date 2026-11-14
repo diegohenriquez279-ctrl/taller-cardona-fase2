@@ -82,7 +82,21 @@
     <dt class="col-sm-3">Total</dt>
     <dd class="col-sm-9">@((totalServicios + totalRepuestos).ToString("C"))</dd>
 </dl>
+<div class="card mb-3">
+    <div class="card-body">
+        <h5 class="card-title">Pagos</h5>
+        <p class="mb-2">
+            <strong>Total de la orden:</strong> @((totalServicios + totalRepuestos).ToString("C"))
+        </p>
 
+        <a asp-controller="Pagos" asp-action="Create" asp-route-ordenTrabajoId="@Model.Id" class="btn btn-warning">
+            Registrar Pago
+        </a>
+        <a asp-controller="Pagos" asp-action="Index" asp-route-ordenTrabajoId="@Model.Id" class="btn btn-outline-secondary">
+            Ver pagos
+        </a>
+    </div>
+</div>
 @if (Model.Estado == EstadoOrden.Entregado)
 {
     <p class="text-muted">La orden ya fue entregada; su estado no se puede cambiar.</p>
@@ -106,5 +120,6 @@ else
 }
 
 <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Editar</a>
+<a asp-controller="Pagos" asp-action="Create" asp-route-ordenTrabajoId="@Model.Id" class="btn btn-success">Registrar Pago</a>
 <a asp-action="Tablero" class="btn btn-outline-secondary">Ver tablero</a>
 <a asp-action="Index" class="btn btn-secondary">Volver al listado</a>
