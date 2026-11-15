@@ -1,21 +1,16 @@
 
 using Microsoft.AspNetCore.Mvc;
-using TallerCardona.Models;
-using TallerCardona.Repositorios;
+using TallerCardona.Services;
 
 namespace TallerCardona.Controllers;
 
 public class PresupuestosController : Controller
 {
-    private readonly IPresupuestoRepositorio _presupuestos;
-    private readonly IOrdenTrabajoRepositorio _ordenes;
+    private readonly IPresupuestoService _presupuestos;
 
-    public PresupuestosController(
-        IPresupuestoRepositorio presupuestos,
-        IOrdenTrabajoRepositorio ordenes)
+    public PresupuestosController(IPresupuestoService presupuestos)
     {
         _presupuestos = presupuestos;
-        _ordenes = ordenes;
     }
 
     public IActionResult Index()
@@ -37,49 +32,19 @@ public class PresupuestosController : Controller
     [ValidateAntiForgeryToken]
     public IActionResult Crear(int ordenTrabajoId)
     {
-        var orden = _ordenes.ObtenerPorId(ordenTrabajoId);
+        var resultado = _presupuestos.Crear(ordenTrabajoId);
 
-        if (orden is null)
+        if (!resultado.Exito)
         {
-            TempData["Error"] = "No se encontró la orden de trabajo.";
-            return RedirectToAction("Index", "Ordenes");
+            TempData["Error"] = resultado.Mensaje;
+
+            return RedirectToAction(
+                "Details",
+                "OrdenesTrabajo",
+                new { id = ordenTrabajoId });
         }
 
-        if (orden.Presupuesto is not null ||
-            _presupuestos.Listar().Any(p => p.OrdenTrabajoId == orden.Id))
-        {
-            TempData["Error"] = "Esta orden ya tiene un presupuesto.";
-            return RedirectToAction("Index", "Ordenes");
-        }
-
-        var totalServicios = orden.Servicios.Sum(s => s.Subtotal);
-        var totalRepuestos = orden.Repuestos.Sum(r => r.Subtotal);
-        var total = totalServicios + totalRepuestos;
-
-        if (total <= 0)
-        {
-            TempData["Error"] =
-                "No se puede crear un presupuesto de cero. Verifique los servicios y repuestos de la orden.";
-
-            return RedirectToAction("Details", "Ordenes",
-                new { id = orden.Id });
-        }
-
-        var presupuesto = new Presupuesto
-        {
-            OrdenTrabajoId = orden.Id,
-            OrdenTrabajo = orden,
-            TotalEstimado = total,
-            Estado = EstadoPresupuesto.Pendiente
-        };
-
-        _presupuestos.Agregar(presupuesto);
-
-        orden.Presupuesto = presupuesto;
-        _ordenes.Actualizar(orden);
-
-        TempData["Mensaje"] = "Presupuesto creado correctamente.";
-
+        TempData["Mensaje"] = resultado.Mensaje;
         return RedirectToAction(nameof(Index));
     }
 
@@ -87,24 +52,12 @@ public class PresupuestosController : Controller
     [ValidateAntiForgeryToken]
     public IActionResult Autorizar(int id)
     {
-        var presupuesto = _presupuestos.ObtenerPorId(id);
+        var resultado = _presupuestos.Autorizar(id);
 
-        if (presupuesto is null)
-            return NotFound();
-
-        if (presupuesto.Estado != EstadoPresupuesto.Pendiente)
-        {
-            TempData["Error"] =
-                "Solo se pueden autorizar presupuestos pendientes.";
-
-            return RedirectToAction(nameof(Index));
-        }
-
-        presupuesto.Estado = EstadoPresupuesto.Autorizado;
-        _presupuestos.Actualizar(presupuesto);
-
-        TempData["Mensaje"] =
-            "Presupuesto autorizado correctamente.";
+        if (resultado.Exito)
+            TempData["Mensaje"] = resultado.Mensaje;
+        else
+            TempData["Error"] = resultado.Mensaje;
 
         return RedirectToAction(nameof(Index));
     }
@@ -113,24 +66,20 @@ public class PresupuestosController : Controller
     [ValidateAntiForgeryToken]
     public IActionResult Rechazar(int id)
     {
-        var presupuesto = _presupuestos.ObtenerPorId(id);
+        var resultado = _presupuestos.Rechazar(id);
 
-        if (presupuesto is null)
-            return NotFound();
-
-        if (presupuesto.Estado != EstadoPresupuesto.Pendiente)
-        {
-            TempData["Error"] =
-                "Solo se pueden rechazar presupuestos pendientes.";
-
-            return RedirectToAction(nameof(Index));
-        }
-
-        presupuesto.Estado = EstadoPresupuesto.Rechazado;
-        _presupuestos.Actualizar(presupuesto);
-
-        TempData["Mensaje"] = "Presupuesto rechazado.";
+        if (resultado.Exito)
+            TempData["Mensaje"] = resultado.Mensaje;
+        else
+            TempData["Error"] = resultado.Mensaje;
 
         return RedirectToAction(nameof(Index));
+    }
+
+    // Consulta LINQ de presupuestos agrupados por estado.
+    public IActionResult ReportePorEstado()
+    {
+        var reporte = _presupuestos.ListarPorEstado();
+        return Json(reporte);
     }
 }
