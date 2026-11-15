@@ -3,6 +3,10 @@
 @{
     var vehiculos = (SelectList)ViewData["Vehiculos"]!;
     var estados = (List<SelectListItem>)ViewData["Estados"]!;
+    var servicios = (List<Servicio>)ViewData["Servicios"]!;
+    var repuestos = (List<Repuesto>)ViewData["Repuestos"]!;
+    var serviciosMarcados = (List<int>)ViewData["ServiciosMarcados"]!;
+    var repuestosMarcados = (List<int>)ViewData["RepuestosMarcados"]!;
 }
 <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 <input type="hidden" asp-for="Id" />
@@ -49,4 +53,42 @@
     <label asp-for="Observaciones" class="form-label">Observaciones</label>
     <textarea asp-for="Observaciones" class="form-control" rows="2"></textarea>
     <span asp-validation-for="Observaciones" class="text-danger"></span>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-3">
+        <h2 class="h5">Servicios</h2>
+        @if (!servicios.Any())
+        {
+            <p class="text-muted small">No hay servicios activos en el catálogo.</p>
+        }
+        @foreach (var s in servicios)
+        {
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="servicioIds" value="@s.Id"
+                       id="servicio-@s.Id" checked="@serviciosMarcados.Contains(s.Id)" />
+                <label class="form-check-label" for="servicio-@s.Id">
+                    @s.Nombre <span class="text-muted">(@s.PrecioBase.ToString("C"))</span>
+                </label>
+            </div>
+        }
+    </div>
+
+    <div class="col-md-6 mb-3">
+        <h2 class="h5">Repuestos</h2>
+        @if (!repuestos.Any())
+        {
+            <p class="text-muted small">No hay repuestos en el catálogo.</p>
+        }
+        @foreach (var r in repuestos)
+        {
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="repuestoIds" value="@r.Id"
+                       id="repuesto-@r.Id" checked="@repuestosMarcados.Contains(r.Id)" />
+                <label class="form-check-label" for="repuesto-@r.Id">
+                    @r.Nombre <span class="text-muted">(@r.Precio.ToString("C"))</span>
+                </label>
+            </div>
+        }
+    </div>
 </div>

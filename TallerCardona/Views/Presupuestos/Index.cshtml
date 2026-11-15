@@ -14,7 +14,7 @@
                 Consulta los presupuestos de las órdenes de trabajo.
             </p>
         </div>
-        <a asp-controller="OrdenesTrabajo"
+        <a asp-controller="Ordenes"
            asp-action="Index"
            class="btn btn-primary">
             Ver órdenes de trabajo
@@ -52,7 +52,7 @@
                             <td>@presupuesto.Id</td>
                             <td>@presupuesto.Fecha.ToString("dd/MM/yyyy")</td>
                             <td>
-                                <a asp-controller="OrdenesTrabajo"
+                                <a asp-controller="Ordenes"
                                    asp-action="Details"
                                    asp-route-id="@presupuesto.OrdenTrabajoId">
                                     Orden N.º @presupuesto.OrdenTrabajoId
