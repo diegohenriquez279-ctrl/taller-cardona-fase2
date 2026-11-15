@@ -1,34 +1,54 @@
+using Microsoft.EntityFrameworkCore;
+using TallerCardona.Data;
+using TallerCardona.Repositorios;
 using TallerCardona.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
 builder.Services.AddControllersWithViews();
 
-builder.Services.AddSingleton<IClienteRepositorio, ClienteRepositorioMemoria>();
-builder.Services.AddSingleton<IVehiculoRepositorio, VehiculoRepositorioMemoria>();
+// ===== Base de datos (Diego) =====
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddScoped<IUnidadDeTrabajo, UnidadDeTrabajo>();
+
+// ===== Módulo Clientes (Diego) =====
+builder.Services.AddScoped<IClienteRepositorio, ClienteRepositorio>();
+builder.Services.AddScoped<IClienteService, ClienteService>();
+
+// ===== Módulo Vehículos (Kimberly) =====
+builder.Services.AddScoped<IVehiculoRepositorio, VehiculoRepositorio>();
+builder.Services.AddScoped<IVehiculoService, VehiculoService>();
+
+// ===== Módulo Órdenes de trabajo (Ariel) =====
+builder.Services.AddScoped<IOrdenTrabajoRepositorio, OrdenTrabajoRepositorio>();
+builder.Services.AddScoped<IOrdenTrabajoService, OrdenTrabajoService>();
+
+// ===== Módulo Presupuestos y catálogo (Andrea) =====
+builder.Services.AddSingleton<IPresupuestoRepositorio, PresupuestoRepositorioMemoria>();
+builder.Services.AddSingleton<IServicioRepositorio, ServicioRepositorioMemoria>();
+builder.Services.AddSingleton<IRepuestoRepositorio, RepuestoRepositorioMemoria>();
+
+// ===== Módulo Pagos (Carlos) =====
+// TEMPORAL: versión en memoria. Carlos la reemplaza por PagoRepositorio y PagoService.
+builder.Services.AddSingleton<IPagoRepositorio, PagoRepositorioMemoria>();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
 app.UseHttpsRedirection();
 app.UseRouting();
-
 app.UseAuthorization();
-
 app.MapStaticAssets();
 
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
-
 
 app.Run();
