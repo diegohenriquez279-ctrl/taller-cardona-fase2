@@ -6,12 +6,20 @@
 
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h1 class="h3 mb-0">Clientes</h1>
-    <a asp-action="Create" class="btn btn-primary">Nuevo cliente</a>
+    <div>
+        <a asp-action="Resumen" class="btn btn-outline-primary">Resumen</a>
+        <a asp-action="Create" class="btn btn-primary">Nuevo cliente</a>
+    </div>
 </div>
 
 @if (TempData["Mensaje"] is string mensaje)
 {
     <div class="alert alert-success">@mensaje</div>
+}
+
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger">@error</div>
 }
 
 <form method="get" asp-action="Index" class="row g-2 mb-3">

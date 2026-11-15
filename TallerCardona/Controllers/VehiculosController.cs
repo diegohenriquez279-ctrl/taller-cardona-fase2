@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using TallerCardona.Models;
-using TallerCardona.Services;
+using TallerCardona.Repositorios;
 
 namespace TallerCardona.Controllers;
 
