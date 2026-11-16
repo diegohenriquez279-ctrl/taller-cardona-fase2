@@ -1,16 +1,16 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using TallerCardona.Models;
-using TallerCardona.Repositorios;
+using TallerCardona.Services;
 
 namespace TallerCardona.Controllers;
 
 public class VehiculosController : Controller
 {
-    private readonly IVehiculoRepositorio _vehiculos;
-    private readonly IClienteRepositorio _clientes;
+    private readonly IVehiculoService _vehiculos;
+    private readonly IClienteService _clientes;
 
-    public VehiculosController(IVehiculoRepositorio vehiculos, IClienteRepositorio clientes)
+    public VehiculosController(IVehiculoService vehiculos, IClienteService clientes)
     {
         _vehiculos = vehiculos;
         _clientes = clientes;
@@ -21,6 +21,8 @@ public class VehiculosController : Controller
         ViewData["Busqueda"] = busqueda;
         return View(_vehiculos.Listar(busqueda));
     }
+
+    public IActionResult Resumen() => View(_vehiculos.ListarResumen());
 
     public IActionResult Details(int id)
     {
@@ -39,15 +41,21 @@ public class VehiculosController : Controller
     [ValidateAntiForgeryToken]
     public IActionResult Create(Vehiculo vehiculo)
     {
-        ValidarClienteYPlaca(vehiculo);
         if (!ModelState.IsValid)
         {
             CargarClientes(vehiculo.ClienteId);
             return View(vehiculo);
         }
 
-        _vehiculos.Agregar(vehiculo);
-        TempData["Mensaje"] = "Vehículo registrado correctamente.";
+        var resultado = _vehiculos.Crear(vehiculo);
+        if (!resultado.Exito)
+        {
+            ModelState.AddModelError(string.Empty, resultado.Mensaje);
+            CargarClientes(vehiculo.ClienteId);
+            return View(vehiculo);
+        }
+
+        TempData["Mensaje"] = resultado.Mensaje;
         return RedirectToAction(nameof(Index));
     }
 
@@ -64,15 +72,22 @@ public class VehiculosController : Controller
     public IActionResult Edit(int id, Vehiculo vehiculo)
     {
         if (id != vehiculo.Id) return NotFound();
-        ValidarClienteYPlaca(vehiculo, id);
+
         if (!ModelState.IsValid)
         {
             CargarClientes(vehiculo.ClienteId);
             return View(vehiculo);
         }
 
-        _vehiculos.Actualizar(vehiculo);
-        TempData["Mensaje"] = "Vehículo actualizado correctamente.";
+        var resultado = _vehiculos.Actualizar(vehiculo);
+        if (!resultado.Exito)
+        {
+            ModelState.AddModelError(string.Empty, resultado.Mensaje);
+            CargarClientes(vehiculo.ClienteId);
+            return View(vehiculo);
+        }
+
+        TempData["Mensaje"] = resultado.Mensaje;
         return RedirectToAction(nameof(Index));
     }
 
@@ -87,31 +102,21 @@ public class VehiculosController : Controller
     [ValidateAntiForgeryToken]
     public IActionResult DeleteConfirmed(int id)
     {
-        var vehiculo = _vehiculos.ObtenerPorId(id);
-        if (vehiculo is null) return NotFound();
+        var resultado = _vehiculos.Eliminar(id);
+        if (!resultado.Exito)
+            TempData["Error"] = resultado.Mensaje;
+        else
+            TempData["Mensaje"] = resultado.Mensaje;
 
-        if (vehiculo.Ordenes.Count > 0)
-        {
-            TempData["Error"] = "No se puede eliminar un vehículo que ya tiene historial de órdenes de trabajo.";
-            return RedirectToAction(nameof(Index));
-        }
-
-        _vehiculos.Eliminar(id);
-        TempData["Mensaje"] = "Vehículo eliminado.";
         return RedirectToAction(nameof(Index));
     }
 
     private void CargarClientes(int? clienteSeleccionado = null)
     {
-        ViewBag.Clientes = new SelectList(_clientes.Listar(), nameof(Cliente.Id), nameof(Cliente.Nombre), clienteSeleccionado);
-    }
-
-    private void ValidarClienteYPlaca(Vehiculo vehiculo, int? excluirId = null)
-    {
-        if (_clientes.ObtenerPorId(vehiculo.ClienteId) is null)
-            ModelState.AddModelError(nameof(vehiculo.ClienteId), "Seleccione un cliente registrado.");
-
-        if (!string.IsNullOrWhiteSpace(vehiculo.Placa) && _vehiculos.PlacaEnUso(vehiculo.Placa, excluirId))
-            ModelState.AddModelError(nameof(vehiculo.Placa), "Ya existe un vehículo registrado con esa placa.");
+        ViewBag.Clientes = new SelectList(
+            _clientes.Listar(),
+            nameof(Cliente.Id),
+            nameof(Cliente.Nombre),
+            clienteSeleccionado);
     }
 }
