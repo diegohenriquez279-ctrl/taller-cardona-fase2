@@ -1,4 +1,5 @@
 using TallerCardona.Models;
+using TallerCardona.Models.Reportes;
 
 namespace TallerCardona.Repositorios;
 
@@ -41,10 +42,30 @@ public class VehiculoRepositorioMemoria : IVehiculoRepositorio
         return resultado.OrderBy(v => v.Placa).ToList();
     }
 
+    public List<VehiculoResumen> ListarResumen() =>
+        _vehiculos
+            .Join(
+                _clientes.Listar(),
+                vehiculo => vehiculo.ClienteId,
+                cliente => cliente.Id,
+                (vehiculo, cliente) => new VehiculoResumen
+                {
+                    Id = vehiculo.Id,
+                    Placa = vehiculo.Placa,
+                    Marca = vehiculo.Marca,
+                    Modelo = vehiculo.Modelo,
+                    Anio = vehiculo.Anio,
+                    ClienteNombre = cliente.Nombre
+                })
+            .OrderBy(resultado => resultado.Placa)
+            .ToList();
+
     public Vehiculo? ObtenerPorId(int id) => _vehiculos.FirstOrDefault(v => v.Id == id);
 
     public bool PlacaEnUso(string placa, int? excluirId = null) => _vehiculos.Any(v =>
         v.Id != excluirId && string.Equals(v.Placa, placa.Trim(), StringComparison.OrdinalIgnoreCase));
+
+    public bool ExisteCliente(int clienteId) => _clientes.ObtenerPorId(clienteId) is not null;
 
     public void Agregar(Vehiculo vehiculo)
     {
