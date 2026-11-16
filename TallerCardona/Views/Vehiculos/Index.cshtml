@@ -6,7 +6,10 @@
 
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h1 class="h3 mb-0">Vehículos</h1>
-    <a asp-action="Create" class="btn btn-primary">Registrar vehículo</a>
+    <div class="d-flex gap-2">
+        <a asp-action="Resumen" class="btn btn-outline-secondary">Resumen LINQ</a>
+        <a asp-action="Create" class="btn btn-primary">Registrar vehículo</a>
+    </div>
 </div>
 
 @if (TempData["Mensaje"] is string mensaje)
