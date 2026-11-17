@@ -21,7 +21,7 @@
 
             <!-- INFO DE LA ORDEN -->
             <div style="background:#fff7ed; border:1px solid #ffedd5; border-radius:8px; padding:15px; margin-bottom:20px;">
-                <strong>Orden #@Model.OrdenTrabajoId</strong> - @(orden?.Cliente?.Nombre ?? "Cliente")<br />
+                <strong>Orden #@Model.OrdenTrabajoId</strong> - @(orden?.Vehiculo?.Cliente?.Nombre ?? "Cliente")<br />
                 <span style="color:#6b7280; font-size:13px;">
                     Total presupuesto: @presupuesto?.TotalEstimado.ToString("C") |
                     Ya pagado: @ViewBag.YaPagado?.ToString("C") |
