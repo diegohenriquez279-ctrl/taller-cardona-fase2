@@ -7,6 +7,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using Serilog;
 using TallerCardona.Data;
+using TallerCardona.Middleware;
 using TallerCardona.Models;
 using TallerCardona.Repositorios;
 using TallerCardona.Services;
@@ -184,11 +185,21 @@ var app = builder.Build();
 // Crea roles y usuarios de prueba si no existen (ver Data/SeedIdentidad.cs).
 await SeedIdentidad.CargarAsync(app.Services);
 
+// ===== Manejo de errores =====
+// Va primero para atrapar los errores de todo lo que viene después.
+// /api -> JSON ProblemDetails; MVC -> página /Home/Error con id de seguimiento.
+app.UseMiddleware<ManejoErroresMiddleware>();
+
 if (!app.Environment.IsDevelopment())
 {
-    app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
 }
+
+// 404 y otros códigos sin contenido -> página amable /Home/Estado/{codigo}.
+// Solo para la parte MVC: la API responde sus propios códigos (401, 404...) sin HTML.
+app.UseWhen(
+    contexto => !contexto.Request.Path.StartsWithSegments("/api"),
+    rama => rama.UseStatusCodePagesWithReExecute("/Home/Estado/{0}"));
 
 // Una línea de log por cada petición (método, ruta, código y tiempo).
 app.UseSerilogRequestLogging();
