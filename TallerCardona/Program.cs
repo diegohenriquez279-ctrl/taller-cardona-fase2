@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
@@ -30,7 +31,15 @@ builder.Host.UseSerilog((contexto, configuracion) => configuracion
         retainedFileCountLimit: 30,
         outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff} [{Level:u3}] {SourceContext} {Message:lj}{NewLine}{Exception}"));
 
-builder.Services.AddControllersWithViews();
+// Filtro global AutoValidateAntiforgeryToken: TODOS los POST/PUT/DELETE de MVC exigen el
+// token antiforgery (aunque alguien olvide poner [ValidateAntiForgeryToken]).
+// La API no lo usa porque ApiControllerBase tiene [IgnoreAntiforgeryToken].
+builder.Services.AddControllersWithViews(opciones =>
+    opciones.Filters.Add(new AutoValidateAntiforgeryTokenAttribute()));
+
+// Nombre del encabezado para mandar el token en peticiones fetch/AJAX.
+// En JavaScript: headers: { "RequestVerificationToken": window.tokenAntiforgery() }
+builder.Services.AddAntiforgery(opciones => opciones.HeaderName = "RequestVerificationToken");
 
 // ===== Base de datos (Diego) =====
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -200,6 +209,16 @@ if (!app.Environment.IsDevelopment())
 app.UseWhen(
     contexto => !contexto.Request.Path.StartsWithSegments("/api"),
     rama => rama.UseStatusCodePagesWithReExecute("/Home/Estado/{0}"));
+
+// ===== Encabezados de seguridad básicos (en todas las respuestas) =====
+app.Use(async (contexto, siguiente) =>
+{
+    var encabezados = contexto.Response.Headers;
+    encabezados["X-Content-Type-Options"] = "nosniff";                    // el navegador no "adivina" tipos de archivo
+    encabezados["X-Frame-Options"] = "DENY";                              // nadie puede meter el sitio en un iframe
+    encabezados["Referrer-Policy"] = "strict-origin-when-cross-origin";   // no filtra rutas internas a otros sitios
+    await siguiente();
+});
 
 // Una línea de log por cada petición (método, ruta, código y tiempo).
 app.UseSerilogRequestLogging();
