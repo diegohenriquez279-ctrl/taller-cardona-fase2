@@ -1,6 +1,9 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using TallerCardona.Data;
 using TallerCardona.Models;
 using TallerCardona.Repositorios;
@@ -46,8 +49,47 @@ builder.Services.ConfigureApplicationCookie(opciones =>
     opciones.SlidingExpiration = true;
 });
 
+// ===== Seguridad: JWT para la API =====
+// La cookie de Identity sigue siendo el esquema POR DEFECTO (lo usa toda la parte MVC).
+// JWT se agrega como SEGUNDO esquema y solo lo usan los controladores que heredan de
+// Controllers/Api/ApiControllerBase (ahí se indica AuthenticationSchemes = JwtBearer).
+//
+// La clave "Jwt:Key" NO va en appsettings.json:
+//   - Desarrollo: está en appsettings.Development.json (clave de prueba).
+//   - Producción (Azure): crear la variable de entorno / App Setting  Jwt__Key = <clave larga y secreta>
+//     (el doble guion bajo "__" equivale a "Jwt:Key"). Ejemplo en PowerShell:
+//       $env:Jwt__Key = "una-clave-muy-larga-de-al-menos-32-caracteres"
+builder.Services.AddScoped<TokenService>();
+builder.Services.AddAuthentication()
+    .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, opciones =>
+    {
+        opciones.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            ValidateAudience = true,
+            ValidAudience = builder.Configuration["Jwt:Audience"],
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.FromMinutes(1),
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = TokenService.ObtenerClave(builder.Configuration),
+            // Para que User.Identity.Name y los roles del token funcionen igual que con la cookie.
+            NameClaimType = ClaimTypes.Name,
+            RoleClaimType = ClaimTypes.Role
+        };
+    });
+
 // ===== Seguridad: políticas de autorización =====
 // En los controladores se usan por nombre: [Authorize(Policy = "AdminORecepcion")]
+//
+// ¿Cómo sirven las MISMAS políticas para MVC (cookie) y API (JWT)?
+// Las políticas solo piden ROLES; no dicen con qué esquema se autentica el usuario.
+// El esquema lo pone cada controlador:
+//   - Controladores MVC: no indican nada -> se usa la cookie (esquema por defecto).
+//   - Controladores API: heredan de ApiControllerBase, que indica JWT.
+// ASP.NET junta el [Authorize] de la clase base con el [Authorize(Policy=...)] del
+// controlador, así que en la API se exige "token JWT válido + rol de la política".
+// Por eso NO hace falta duplicar las políticas para la API.
 builder.Services.AddAuthorization(opciones =>
 {
     // Política de respaldo: TODO requiere usuario autenticado, salvo lo que tenga [AllowAnonymous].
