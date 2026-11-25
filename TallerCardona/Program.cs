@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi;
 using TallerCardona.Data;
 using TallerCardona.Models;
 using TallerCardona.Repositorios;
@@ -129,6 +130,38 @@ builder.Services.AddSingleton<IRepuestoRepositorio, RepuestoRepositorioMemoria>(
 // TEMPORAL: versión en memoria. Carlos la reemplaza por PagoRepositorio y PagoService.
 builder.Services.AddSingleton<IPagoRepositorio, PagoRepositorioMemoria>();
 
+// ===== Swagger (documentación y pruebas de la API) =====
+// Disponible en /swagger, también en producción porque se usa en la demo.
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(opciones =>
+{
+    opciones.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "API Taller Cardona",
+        Version = "v1",
+        Description = "Primero use POST /api/auth/login, copie el token y péguelo en el botón Authorize."
+    });
+
+    // Botón "Authorize": se pega solo el token (Swagger agrega "Bearer " automáticamente).
+    opciones.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Pegue aquí el token que devuelve /api/auth/login."
+    });
+    opciones.AddSecurityRequirement(documento => new OpenApiSecurityRequirement
+    {
+        [new OpenApiSecuritySchemeReference("Bearer", documento)] = new List<string>()
+    });
+
+    // Lee los comentarios /// del código (TallerCardona.xml) para describir cada endpoint.
+    var archivoXml = Path.Combine(AppContext.BaseDirectory, $"{typeof(Program).Assembly.GetName().Name}.xml");
+    if (File.Exists(archivoXml))
+        opciones.IncludeXmlComments(archivoXml);
+});
+
 var app = builder.Build();
 
 // Crea roles y usuarios de prueba si no existen (ver Data/SeedIdentidad.cs).
@@ -141,6 +174,16 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// Swagger va ANTES de autenticación/autorización para que la página cargue sin sesión
+// (los endpoints de la API siguen pidiendo token).
+app.UseSwagger();
+app.UseSwaggerUI(opciones =>
+{
+    opciones.SwaggerEndpoint("/swagger/v1/swagger.json", "API Taller Cardona v1");
+    opciones.DocumentTitle = "API Taller Cardona";
+});
+
 app.UseRouting();
 app.UseAuthentication(); // ¿quién es el usuario? (lee la cookie o el token)
 app.UseAuthorization();  // ¿tiene permiso? (revisa [Authorize] y las políticas)
