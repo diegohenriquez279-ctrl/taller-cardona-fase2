@@ -5,12 +5,29 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
+using Serilog;
 using TallerCardona.Data;
 using TallerCardona.Models;
 using TallerCardona.Repositorios;
 using TallerCardona.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// ===== Logging con Serilog =====
+// Escribe en la consola y en Logs/taller-AAAAMMDD.txt (un archivo nuevo cada día,
+// se guardan los últimos 30). Úsenlo en cualquier clase pidiendo ILogger<SuClase>
+// en el constructor: _logger.LogInformation("Cliente {Id} creado", id);
+builder.Host.UseSerilog((contexto, configuracion) => configuracion
+    .MinimumLevel.Information()
+    .MinimumLevel.Override("Microsoft.AspNetCore", Serilog.Events.LogEventLevel.Warning)
+    .MinimumLevel.Override("Microsoft.EntityFrameworkCore", Serilog.Events.LogEventLevel.Warning)
+    .Enrich.FromLogContext()
+    .WriteTo.Console()
+    .WriteTo.File(
+        Path.Combine(contexto.HostingEnvironment.ContentRootPath, "Logs", "taller-.txt"),
+        rollingInterval: RollingInterval.Day,
+        retainedFileCountLimit: 30,
+        outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff} [{Level:u3}] {SourceContext} {Message:lj}{NewLine}{Exception}"));
 
 builder.Services.AddControllersWithViews();
 
@@ -172,6 +189,9 @@ if (!app.Environment.IsDevelopment())
     app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
 }
+
+// Una línea de log por cada petición (método, ruta, código y tiempo).
+app.UseSerilogRequestLogging();
 
 app.UseHttpsRedirection();
 
