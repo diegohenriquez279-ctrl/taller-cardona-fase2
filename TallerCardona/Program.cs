@@ -75,6 +75,25 @@ builder.Services.ConfigureApplicationCookie(opciones =>
     opciones.AccessDeniedPath = "/Account/AccesoDenegado";
     opciones.ExpireTimeSpan = TimeSpan.FromHours(8);
     opciones.SlidingExpiration = true;
+
+    // Si una ruta /api cae en la cookie (por ejemplo, una ruta /api que no existe),
+    // responder 401/403 en vez de redirigir a la página de login (HTML).
+    opciones.Events.OnRedirectToLogin = contexto =>
+    {
+        if (contexto.Request.Path.StartsWithSegments("/api"))
+            contexto.Response.StatusCode = StatusCodes.Status401Unauthorized;
+        else
+            contexto.Response.Redirect(contexto.RedirectUri);
+        return Task.CompletedTask;
+    };
+    opciones.Events.OnRedirectToAccessDenied = contexto =>
+    {
+        if (contexto.Request.Path.StartsWithSegments("/api"))
+            contexto.Response.StatusCode = StatusCodes.Status403Forbidden;
+        else
+            contexto.Response.Redirect(contexto.RedirectUri);
+        return Task.CompletedTask;
+    };
 });
 
 // ===== Seguridad: JWT para la API =====
