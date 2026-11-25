@@ -144,7 +144,9 @@ app.UseHttpsRedirection();
 app.UseRouting();
 app.UseAuthentication(); // ¿quién es el usuario? (lee la cookie o el token)
 app.UseAuthorization();  // ¿tiene permiso? (revisa [Authorize] y las políticas)
-app.MapStaticAssets();
+// CSS, JS e imágenes se sirven sin sesión (si no, la política de respaldo
+// bloquearía hasta los estilos de la página de login).
+app.MapStaticAssets().AllowAnonymous();
 
 app.MapControllerRoute(
     name: "default",
