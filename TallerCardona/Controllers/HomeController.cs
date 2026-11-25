@@ -1,9 +1,12 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 using TallerCardona.Models;
 
 namespace TallerCardona.Controllers
 {
+    // [AllowAnonymous]: la portada, privacidad y la página de error se ven sin iniciar sesión.
+    [AllowAnonymous]
     public class HomeController : Controller
     {
         public IActionResult Index()

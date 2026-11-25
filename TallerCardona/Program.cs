@@ -1,6 +1,8 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using TallerCardona.Data;
+using TallerCardona.Models;
 using TallerCardona.Repositorios;
 using TallerCardona.Services;
 
@@ -44,6 +46,26 @@ builder.Services.ConfigureApplicationCookie(opciones =>
     opciones.SlidingExpiration = true;
 });
 
+// ===== Seguridad: políticas de autorización =====
+// En los controladores se usan por nombre: [Authorize(Policy = "AdminORecepcion")]
+builder.Services.AddAuthorization(opciones =>
+{
+    // Política de respaldo: TODO requiere usuario autenticado, salvo lo que tenga [AllowAnonymous].
+    // Así, si alguien olvida poner [Authorize] en un controlador, igual queda protegido.
+    opciones.FallbackPolicy = new AuthorizationPolicyBuilder()
+        .RequireAuthenticatedUser()
+        .Build();
+
+    // Solo el administrador (por ejemplo, eliminar registros).
+    opciones.AddPolicy("SoloAdministrador", p => p.RequireRole(Roles.Administrador));
+
+    // Administrador o recepción (clientes, vehículos, presupuestos, pagos...).
+    opciones.AddPolicy("AdminORecepcion", p => p.RequireRole(Roles.Administrador, Roles.Recepcion));
+
+    // Cualquier persona del taller (los tres roles), por ejemplo para órdenes de trabajo.
+    opciones.AddPolicy("PersonalTaller", p => p.RequireRole(Roles.Todos));
+});
+
 // ===== Módulo Clientes (Diego) =====
 builder.Services.AddScoped<IClienteRepositorio, ClienteRepositorio>();
 builder.Services.AddScoped<IClienteService, ClienteService>();
@@ -78,7 +100,8 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseRouting();
-app.UseAuthorization();
+app.UseAuthentication(); // ¿quién es el usuario? (lee la cookie o el token)
+app.UseAuthorization();  // ¿tiene permiso? (revisa [Authorize] y las políticas)
 app.MapStaticAssets();
 
 app.MapControllerRoute(

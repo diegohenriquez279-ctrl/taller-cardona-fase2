@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TallerCardona.Models;
 using TallerCardona.Services;
@@ -6,6 +7,10 @@ namespace TallerCardona.Controllers;
 
 // El controlador ya no habla con el repositorio: recibe las peticiones,
 // llama al servicio y decide qué vista mostrar.
+//
+// Seguridad: todo el controlador es para Administrador o Recepción.
+// Las acciones de eliminar además exigen "SoloAdministrador" (se suman ambas políticas).
+[Authorize(Policy = "AdminORecepcion")]
 public class ClientesController : Controller
 {
     private readonly IClienteService _clienteService;
@@ -90,6 +95,7 @@ public class ClientesController : Controller
     }
 
     // GET: /Clientes/Delete/1
+    [Authorize(Policy = "SoloAdministrador")]
     public IActionResult Delete(int id)
     {
         var cliente = _clienteService.ObtenerPorId(id);
@@ -100,6 +106,7 @@ public class ClientesController : Controller
     // POST: /Clientes/Delete/1
     [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
+    [Authorize(Policy = "SoloAdministrador")]
     public IActionResult DeleteConfirmed(int id)
     {
         var resultado = _clienteService.Eliminar(id);
