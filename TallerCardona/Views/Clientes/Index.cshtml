@@ -22,9 +22,15 @@
     <div class="alert alert-danger">@error</div>
 }
 
-<form method="get" asp-action="Index" class="row g-2 mb-3">
+@* Formulario normal de búsqueda: funciona aunque JavaScript falle o esté desactivado.
+   Con JavaScript, clientes.js filtra la tabla mientras se escribe (sin recargar). *@
+<form method="get" asp-action="Index" class="row g-2 mb-3" id="formBusqueda">
     <div class="col-sm-8 col-md-6">
         <input type="text" name="busqueda" value="@busqueda" class="form-control"
+               id="txtBusqueda" autocomplete="off"
+               data-url-buscar="@Url.Action("Buscar")"
+               data-url-base="@Url.Content("~/Clientes")"
+               data-puede-eliminar="@(User.IsInRole(Roles.Administrador) ? "true" : "false")"
                placeholder="Buscar por nombre o teléfono" />
     </div>
     <div class="col-auto">
@@ -33,37 +39,39 @@
     </div>
 </form>
 
-@if (!Model.Any())
-{
-    <p class="text-muted">No se encontraron clientes.</p>
-}
-else
-{
-    <table class="table table-hover align-middle">
-        <thead>
+<p class="text-muted @(Model.Any() ? "d-none" : "")" id="sinResultados">No se encontraron clientes.</p>
+
+<table class="table table-hover align-middle @(Model.Any() ? "" : "d-none")" id="tablaClientes">
+    <thead>
+        <tr>
+            <th>Nombre</th>
+            <th>Teléfono</th>
+            <th>Correo</th>
+            <th class="text-center">Vehículos</th>
+            <th class="text-end">Acciones</th>
+        </tr>
+    </thead>
+    <tbody id="cuerpoClientes">
+        @foreach (var c in Model)
+        {
             <tr>
-                <th>Nombre</th>
-                <th>Teléfono</th>
-                <th>Correo</th>
-                <th class="text-center">Vehículos</th>
-                <th class="text-end">Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var c in Model)
-            {
-                <tr>
-                    <td>@c.Nombre</td>
-                    <td>@c.Telefono</td>
-                    <td>@(c.Correo ?? "—")</td>
-                    <td class="text-center">@c.Vehiculos.Count</td>
-                    <td class="text-end">
-                        <a asp-action="Details" asp-route-id="@c.Id" class="btn btn-sm btn-outline-secondary">Ver</a>
-                        <a asp-action="Edit" asp-route-id="@c.Id" class="btn btn-sm btn-outline-primary">Editar</a>
+                <td>@c.Nombre</td>
+                <td>@c.Telefono</td>
+                <td>@(c.Correo ?? "—")</td>
+                <td class="text-center">@c.Vehiculos.Count</td>
+                <td class="text-end">
+                    <a asp-action="Details" asp-route-id="@c.Id" class="btn btn-sm btn-outline-secondary">Ver</a>
+                    <a asp-action="Edit" asp-route-id="@c.Id" class="btn btn-sm btn-outline-primary">Editar</a>
+                    @if (User.IsInRole(Roles.Administrador))
+                    {
                         <a asp-action="Delete" asp-route-id="@c.Id" class="btn btn-sm btn-outline-danger">Eliminar</a>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@section Scripts {
+    <script src="~/js/clientes.js" asp-append-version="true"></script>
 }

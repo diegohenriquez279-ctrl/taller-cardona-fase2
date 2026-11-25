@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TallerCardona.Models;
+using TallerCardona.Models.Dtos;
 using TallerCardona.Services;
 
 namespace TallerCardona.Controllers;
@@ -26,6 +27,19 @@ public class ClientesController : Controller
         ViewData["Busqueda"] = busqueda;
         var clientes = _clienteService.Listar(busqueda);
         return View(clientes);
+    }
+
+    // GET: /Clientes/Buscar?texto=car
+    // Búsqueda en vivo (AJAX): la llama wwwroot/js/clientes.js mientras el usuario escribe.
+    // Devuelve JSON pero usa la COOKIE de sesión (no JWT) porque la pide la propia página MVC.
+    // Reutiliza el DTO de la API para no devolver la entidad completa.
+    [HttpGet]
+    public IActionResult Buscar(string? texto)
+    {
+        var clientes = _clienteService.Listar(texto)
+            .Select(ClienteDto.DesdeEntidad)
+            .ToList();
+        return Json(clientes);
     }
 
     // GET: /Clientes/Resumen
