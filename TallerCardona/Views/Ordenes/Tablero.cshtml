@@ -26,12 +26,14 @@
 {
     <div class="alert alert-danger">@error</div>
 }
+@* Aquí tablero.js muestra el mensaje del cambio de estado sin recargar *@
+<div id="mensajeTablero" aria-live="polite"></div>
 
 <div class="row row-cols-2 row-cols-md-6 g-2 mb-4">
     <div class="col">
         <div class="card text-center h-100">
             <div class="card-body p-2">
-                <div class="fs-3 fw-bold">@totalOrdenes</div>
+                <div class="fs-3 fw-bold" data-conteo-total>@totalOrdenes</div>
                 <div class="small text-muted">Total de órdenes</div>
             </div>
         </div>
@@ -41,7 +43,7 @@
         <div class="col">
             <div class="card text-center h-100">
                 <div class="card-body p-2">
-                    <div class="fs-3 fw-bold">@c.Cantidad</div>
+                    <div class="fs-3 fw-bold" data-conteo-estado="@c.Estado">@c.Cantidad</div>
                     <span class="badge @c.Estado.ClaseBadge()">@c.Estado.Nombre()</span>
                 </div>
             </div>
@@ -49,24 +51,26 @@
     }
 </div>
 
-<div class="row row-cols-1 row-cols-md-5 g-2">
+@* data-estados: el orden de las columnas, para que tablero.js sepa cuál es la anterior y la siguiente *@
+<div id="tablero" class="row row-cols-1 row-cols-md-5 g-2"
+     data-estados="@string.Join(",", todosLosEstados)"
+     data-url-cambiar="@Url.Action("CambiarEstadoAjax")"
+     data-url-base="@Url.Content("~/Ordenes")">
     @foreach (var estado in todosLosEstados)
     {
         var ordenes = Model.Where(o => o.Estado == estado).OrderBy(o => o.FechaIngreso).ToList();
-        <div class="col">
+        <div class="col" data-columna="@estado">
             <div class="d-flex justify-content-between align-items-center mb-2">
                 <span class="badge @estado.ClaseBadge()">@estado.Nombre()</span>
-                <span class="text-muted small">@conteo.First(c => c.Estado == estado).Cantidad</span>
+                <span class="text-muted small" data-conteo-columna="@estado">@conteo.First(c => c.Estado == estado).Cantidad</span>
             </div>
 
-            @if (!ordenes.Any())
-            {
-                <p class="text-muted small">Sin órdenes.</p>
-            }
+            <p class="text-muted small sin-ordenes @(ordenes.Any() ? "d-none" : "")">Sin órdenes.</p>
 
+            <div class="tarjetas">
             @foreach (var o in ordenes)
             {
-                <div class="card mb-2">
+                <div class="card mb-2" data-orden-id="@o.Id" data-fecha="@o.FechaIngreso.ToString("o")">
                     <div class="card-body p-2">
                         <div class="d-flex justify-content-between">
                             <strong>#@o.Id</strong>
@@ -78,7 +82,7 @@
 
                         <div class="d-flex justify-content-between align-items-center">
                             <a asp-action="Details" asp-route-id="@o.Id" class="btn btn-sm btn-outline-secondary">Ver</a>
-                            <div class="d-flex gap-1">
+                            <div class="d-flex gap-1 flechas">
                                 @if (estado != primero && estado != ultimo)
                                 {
                                     <form asp-action="CambiarEstado" asp-route-id="@o.Id" method="post">
@@ -98,6 +102,11 @@
                     </div>
                 </div>
             }
+            </div>
         </div>
     }
 </div>
+
+@section Scripts {
+    <script src="~/js/tablero.js" asp-append-version="true"></script>
+}
