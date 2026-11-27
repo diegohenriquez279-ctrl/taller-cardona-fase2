@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -8,6 +8,7 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <!-- CS1591: "falta comentario XML". No obligamos a documentar todo, solo la API. -->
     <NoWarn>$(NoWarn);CS1591</NoWarn>
+    <UserSecretsId>8806b015-0ba3-4683-b274-e38837120ca1</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
