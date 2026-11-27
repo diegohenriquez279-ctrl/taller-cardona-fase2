@@ -41,6 +41,8 @@
 
 <p class="text-muted @(Model.Any() ? "d-none" : "")" id="sinResultados">No se encontraron clientes.</p>
 
+@* table-responsive: en pantallas angostas (celular) la tabla se desplaza de lado dentro de este recuadro, sin desbordar la página. *@
+<div class="table-responsive">
 <table class="table table-hover align-middle @(Model.Any() ? "" : "d-none")" id="tablaClientes">
     <thead>
         <tr>
@@ -71,6 +73,7 @@
         }
     </tbody>
 </table>
+</div>
 
 @section Scripts {
     <script src="~/js/clientes.js" asp-append-version="true"></script>
