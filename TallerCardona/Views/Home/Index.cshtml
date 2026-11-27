@@ -1,8 +1,77 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+﻿@using Microsoft.AspNetCore.Authorization
+@inject IAuthorizationService Autorizacion
+@{
+    ViewData["Title"] = "Inicio";
+
+    // Nombre del rol para mostrar (con tilde).
+    var rol = Roles.Todos.FirstOrDefault(r => User.IsInRole(r));
+    var rolTexto = rol switch
+    {
+        Roles.Administrador => "Administrador",
+        Roles.Recepcion => "Recepción",
+        Roles.Mecanico => "Mecánico",
+        _ => "Sin rol"
+    };
+
+    // Saludo según la hora.
+    var hora = DateTime.Now.Hour;
+    var saludo = hora < 5 ? "Buenas noches" : hora < 12 ? "Buenos días" : hora < 19 ? "Buenas tardes" : "Buenas noches";
+
+    // Módulos del sistema. Cada tarjeta se muestra solo si el usuario cumple la política
+    // de ese módulo (las mismas políticas de Program.cs, así no se repiten los roles aquí).
+    var modulos = new[]
+    {
+        new { Titulo = "Clientes", Descripcion = "Registrar, buscar y editar los datos de los clientes.", Controlador = "Clientes", Accion = "Index", Politica = "AdminORecepcion", Color = "primary" },
+        new { Titulo = "Vehículos", Descripcion = "Vehículos de cada cliente: placa, marca, modelo y año.", Controlador = "Vehiculos", Accion = "Index", Politica = "AdminORecepcion", Color = "info" },
+        new { Titulo = "Órdenes de trabajo", Descripcion = "Recibir vehículos, registrar diagnóstico, servicios y repuestos.", Controlador = "Ordenes", Accion = "Index", Politica = "PersonalTaller", Color = "success" },
+        new { Titulo = "Tablero", Descripcion = "Ver las órdenes por estado y moverlas sin recargar la página.", Controlador = "Ordenes", Accion = "Tablero", Politica = "PersonalTaller", Color = "success" },
+        new { Titulo = "Presupuestos", Descripcion = "Presupuestos de cada orden: autorizar o rechazar.", Controlador = "Presupuestos", Accion = "Index", Politica = "AdminORecepcion", Color = "warning" },
+        new { Titulo = "Pagos", Descripcion = "Registrar y consultar los pagos de las órdenes.", Controlador = "Pagos", Accion = "Index", Politica = "AdminORecepcion", Color = "danger" },
+    };
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="p-4 p-md-5 mb-4 bg-light border rounded-3">
+    <h1 class="display-5 fw-bold">Taller Cardona</h1>
+    <p class="lead mb-0">Sistema de gestión del taller mecánico: clientes, vehículos, órdenes de trabajo, presupuestos y pagos.</p>
 </div>
+
+@if (User.Identity?.IsAuthenticated != true)
+{
+    <div class="card shadow-sm mx-auto" style="max-width: 32rem;">
+        <div class="card-body text-center">
+            <h2 class="h5">Bienvenido</h2>
+            <p class="text-muted">Inicie sesión para usar el sistema del taller.</p>
+            <a class="btn btn-primary" asp-controller="Account" asp-action="Login">Iniciar sesión</a>
+        </div>
+    </div>
+}
+else
+{
+    <div class="d-flex flex-wrap align-items-center gap-2 mb-4">
+        <h2 class="h4 mb-0">@saludo, @User.Identity.Name</h2>
+        <span class="badge bg-secondary fs-6">@rolTexto</span>
+    </div>
+
+    <p class="text-muted">Estos son los módulos que puede usar con su rol:</p>
+
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-4">
+        @foreach (var m in modulos)
+        {
+            if (!(await Autorizacion.AuthorizeAsync(User, m.Politica)).Succeeded)
+            {
+                continue;
+            }
+
+            <div class="col">
+                <div class="card h-100 shadow-sm border-0 border-top border-4 border-@m.Color">
+                    <div class="card-body d-flex flex-column">
+                        <h3 class="h5 card-title">@m.Titulo</h3>
+                        <p class="card-text text-muted flex-grow-1">@m.Descripcion</p>
+                        <a class="btn btn-outline-@m.Color align-self-start stretched-link"
+                           asp-controller="@m.Controlador" asp-action="@m.Accion">Abrir</a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
