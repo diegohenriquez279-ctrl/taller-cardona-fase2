@@ -40,7 +40,7 @@ public class PresupuestosController : Controller
 
             return RedirectToAction(
                 "Details",
-                "OrdenesTrabajo",
+                "Ordenes",
                 new { id = ordenTrabajoId });
         }
 
