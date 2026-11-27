@@ -171,6 +171,9 @@ builder.Services.AddScoped<IOrdenTrabajoService, OrdenTrabajoService>();
 builder.Services.AddSingleton<IPresupuestoRepositorio, PresupuestoRepositorioMemoria>();
 builder.Services.AddSingleton<IServicioRepositorio, ServicioRepositorioMemoria>();
 builder.Services.AddSingleton<IRepuestoRepositorio, RepuestoRepositorioMemoria>();
+// Integración: PresupuestosController pide IPresupuestoService y no estaba registrado
+// (la página Presupuestos fallaba al abrirse). Se registra la clase que ya existía.
+builder.Services.AddScoped<IPresupuestoService, PresupuestoService>();
 
 // ===== Módulo Pagos (Carlos) =====
 // TEMPORAL: versión en memoria. Carlos la reemplaza por PagoRepositorio y PagoService.
