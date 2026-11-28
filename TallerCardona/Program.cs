@@ -34,8 +34,12 @@ builder.Host.UseSerilog((contexto, configuracion) => configuracion
 // Filtro global AutoValidateAntiforgeryToken: TODOS los POST/PUT/DELETE de MVC exigen el
 // token antiforgery (aunque alguien olvide poner [ValidateAntiForgeryToken]).
 // La API no lo usa porque ApiControllerBase tiene [IgnoreAntiforgeryToken].
+// JsonStringEnumConverter: los enums viajan como texto en el JSON ("Recibido", "EnProceso",
+// "Efectivo"...) en vez de números, tanto en la API como en los Json() de MVC.
 builder.Services.AddControllersWithViews(opciones =>
-    opciones.Filters.Add(new AutoValidateAntiforgeryTokenAttribute()));
+        opciones.Filters.Add(new AutoValidateAntiforgeryTokenAttribute()))
+    .AddJsonOptions(opciones =>
+        opciones.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter()));
 
 // Nombre del encabezado para mandar el token en peticiones fetch/AJAX.
 // En JavaScript: headers: { "RequestVerificationToken": window.tokenAntiforgery() }
