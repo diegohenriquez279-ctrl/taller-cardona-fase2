@@ -82,21 +82,65 @@
     <dt class="col-sm-3">Total</dt>
     <dd class="col-sm-9">@((totalServicios + totalRepuestos).ToString("C"))</dd>
 </dl>
-<div class="card mb-3">
-    <div class="card-body">
-        <h5 class="card-title">Pagos</h5>
-        <p class="mb-2">
-            <strong>Total de la orden:</strong> @((totalServicios + totalRepuestos).ToString("C"))
-        </p>
+@* Presupuesto y pagos: solo Administrador y Recepción (el mecánico no tiene acceso a esos módulos). *@
+@if (User.IsInRole(Roles.Administrador) || User.IsInRole(Roles.Recepcion))
+{
+    var presupuesto = Model.Presupuesto;
+    var totalPagado = Model.Pagos.Sum(p => p.Monto);
+    <div class="card mb-3">
+        <div class="card-body">
+            <h5 class="card-title">Presupuesto</h5>
+            @if (presupuesto is null)
+            {
+                <p class="mb-2 text-muted">Esta orden todavía no tiene presupuesto.</p>
+            }
+            else
+            {
+                <p class="mb-2">
+                    <a asp-controller="Presupuestos" asp-action="Details" asp-route-id="@presupuesto.Id">Presupuesto N.º @presupuesto.Id</a>
+                    — @presupuesto.TotalEstimado.ToString("C")
+                    <span class="badge @(presupuesto.Estado == EstadoPresupuesto.Pendiente ? "bg-warning text-dark" : presupuesto.Estado == EstadoPresupuesto.Autorizado ? "bg-success" : "bg-danger")">@presupuesto.Estado</span>
+                </p>
+            }
 
-        <a asp-controller="Pagos" asp-action="Create" asp-route-ordenTrabajoId="@Model.Id" class="btn btn-warning">
-            Registrar Pago
-        </a>
-        <a asp-controller="Pagos" asp-action="Index" asp-route-ordenTrabajoId="@Model.Id" class="btn btn-outline-secondary">
-            Ver pagos
-        </a>
+            @* Se puede generar si no hay presupuesto o si el anterior fue rechazado (se regenera). *@
+            @if (presupuesto is null || presupuesto.Estado == EstadoPresupuesto.Rechazado)
+            {
+                <form asp-controller="Presupuestos" asp-action="Crear" method="post" class="d-inline">
+                    <input type="hidden" name="ordenTrabajoId" value="@Model.Id" />
+                    <button type="submit" class="btn btn-primary">
+                        @(presupuesto is null ? "Generar presupuesto" : "Regenerar presupuesto")
+                    </button>
+                </form>
+                @if (!Model.Servicios.Any() && !Model.Repuestos.Any())
+                {
+                    <small class="text-muted d-block mt-1">Agregue servicios o repuestos a la orden antes de generar el presupuesto.</small>
+                }
+            }
+        </div>
     </div>
-</div>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <h5 class="card-title">Pagos</h5>
+            <p class="mb-2">
+                <strong>Total de la orden:</strong> @((totalServicios + totalRepuestos).ToString("C"))
+                @if (presupuesto?.Estado == EstadoPresupuesto.Autorizado)
+                {
+                    <span class="ms-2"><strong>Pagado:</strong> @totalPagado.ToString("C")</span>
+                    <span class="ms-2"><strong>Saldo:</strong> @((presupuesto.TotalEstimado - totalPagado).ToString("C"))</span>
+                }
+            </p>
+
+            <a asp-controller="Pagos" asp-action="Create" asp-route-ordenTrabajoId="@Model.Id" class="btn btn-warning">
+                Registrar Pago
+            </a>
+            <a asp-controller="Pagos" asp-action="Index" asp-route-ordenTrabajoId="@Model.Id" class="btn btn-outline-secondary">
+                Ver pagos
+            </a>
+        </div>
+    </div>
+}
 @if (Model.Estado == EstadoOrden.Entregado)
 {
     <p class="text-muted">La orden ya fue entregada; su estado no se puede cambiar.</p>
