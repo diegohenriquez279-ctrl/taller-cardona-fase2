@@ -3,6 +3,8 @@ using TallerCardona.Models;
 
 namespace TallerCardona.Repositorios;
 
+// YA NO SE REGISTRA en Program.cs: desde el cierre del 27/11/2026 se usa el repositorio EF
+// (Models/Repositorios). Se conserva como referencia del trabajo original.
 public class ServicioRepositorioMemoria : IServicioRepositorio
 {
     private readonly List<Servicio> _servicios = new()

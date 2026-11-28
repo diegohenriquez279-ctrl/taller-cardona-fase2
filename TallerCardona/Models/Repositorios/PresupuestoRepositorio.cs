@@ -25,11 +25,18 @@ public class PresupuestoRepositorio : IPresupuestoRepositorio
             .ToList();
 
     // Busca un presupuesto por su identificador.
+    // Incluye los servicios y repuestos de la orden para mostrar el desglose en Details.
     public Presupuesto? ObtenerPorId(int id) =>
         _context.Presupuestos
             .Include(p => p.OrdenTrabajo)
                 .ThenInclude(o => o!.Vehiculo)
                     .ThenInclude(v => v!.Cliente)
+            .Include(p => p.OrdenTrabajo)
+                .ThenInclude(o => o!.Servicios)
+                    .ThenInclude(d => d.Servicio)
+            .Include(p => p.OrdenTrabajo)
+                .ThenInclude(o => o!.Repuestos)
+                    .ThenInclude(d => d.Repuesto)
             .FirstOrDefault(p => p.Id == id);
 
     // Agrega un presupuesto para guardarlo mediante la unidad de trabajo.

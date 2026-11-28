@@ -172,9 +172,11 @@ builder.Services.AddScoped<IOrdenTrabajoRepositorio, OrdenTrabajoRepositorio>();
 builder.Services.AddScoped<IOrdenTrabajoService, OrdenTrabajoService>();
 
 // ===== Módulo Presupuestos y catálogo (Andrea) =====
-builder.Services.AddSingleton<IPresupuestoRepositorio, PresupuestoRepositorioMemoria>();
-builder.Services.AddSingleton<IServicioRepositorio, ServicioRepositorioMemoria>();
-builder.Services.AddSingleton<IRepuestoRepositorio, RepuestoRepositorioMemoria>();
+// Persistidos en SQL Server con los repositorios EF de Andrea (Models/Repositorios).
+// Los *RepositorioMemoria ya no se registran; quedan en el proyecto como referencia.
+builder.Services.AddScoped<IPresupuestoRepositorio, PresupuestoRepositorio>();
+builder.Services.AddScoped<IServicioRepositorio, ServicioRepositorio>();
+builder.Services.AddScoped<IRepuestoRepositorio, RepuestoRepositorio>();
 // Integración: PresupuestosController pide IPresupuestoService y no estaba registrado
 // (la página Presupuestos fallaba al abrirse). Se registra la clase que ya existía.
 builder.Services.AddScoped<IPresupuestoService, PresupuestoService>();
