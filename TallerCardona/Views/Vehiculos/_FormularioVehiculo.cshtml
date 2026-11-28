@@ -39,7 +39,7 @@
     </div>
     <div class="col-md-4 mb-3">
         <label asp-for="Kilometraje" class="form-label">Kilometraje</label>
-        <input asp-for="Kilometraje" class="form-control" type="number" min="0" step="1" />
+        <input asp-for="Kilometraje" asp-format="{0:0}" class="form-control" type="number" min="0" step="1" />
         <span asp-validation-for="Kilometraje" class="text-danger"></span>
     </div>
 </div>
