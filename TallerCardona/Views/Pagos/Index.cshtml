@@ -25,6 +25,11 @@ table { width:100%; border-collapse:collapse; font-size:13px; }
 th, td { padding:10px; border-bottom:1px solid #e5e7eb; text-align:left; }
 th { background:#f9fafb; }
 .total { margin-top:14px; font-size:13px; }
+.accion { color:#1d4ed8; text-decoration:none; margin-right:10px; font-size:13px; }
+.accion.eliminar { color:#b91c1c; }
+.aviso { padding:10px 14px; border-radius:8px; margin-bottom:14px; font-size:13px; }
+.aviso.ok { background:#dcfce7; color:#166534; }
+.aviso.error { background:#fee2e2; color:#991b1b; }
 </style>
 </head>
 <body>
@@ -41,12 +46,18 @@ th { background:#f9fafb; }
 <div class="main">
 <h1>Pagos y reportes</h1>
 <p class="subtitle">Listado de cobros registrados</p>
+@if (TempData["Mensaje"] != null) { <p class="aviso ok">@TempData["Mensaje"]</p> }
+@if (TempData["Error"] != null) { <p class="aviso error">@TempData["Error"]</p> }
 <div class="card">
 <a href="/Pagos/Create" class="btn-nuevo">+ Registrar pago</a>
 <table>
-<tr><th>Orden</th><th>Fecha</th><th>Monto</th><th>Método</th></tr>
+<tr><th>Orden</th><th>Fecha</th><th>Monto</th><th>Método</th><th>Acciones</th></tr>
 @foreach(var p in Model) {
-<tr><td>@p.OrdenTrabajoId</td><td>@p.Fecha.ToShortDateString()</td><td>@p.Monto.ToString("C")</td><td>@p.MetodoPago</td></tr>
+<tr><td>@p.OrdenTrabajoId</td><td>@p.Fecha.ToShortDateString()</td><td>@p.Monto.ToString("C")</td><td>@p.MetodoPago</td>
+<td><a class="accion" asp-action="Details" asp-route-id="@p.Id">Ver</a>
+@* Solo el administrador puede eliminar pagos (Recepción solo lista, ve y registra). *@
+@if (User.IsInRole(Roles.Administrador)) { <a class="accion eliminar" asp-action="Delete" asp-route-id="@p.Id">Eliminar</a> }
+</td></tr>
 }
 </table>
 <p class="total"><b>Total recaudado:</b> @Model.Sum(x => x.Monto).ToString("C") | <b>Cantidad de pagos:</b> @Model.Count</p>

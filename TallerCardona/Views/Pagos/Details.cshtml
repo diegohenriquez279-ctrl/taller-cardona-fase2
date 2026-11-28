@@ -12,3 +12,7 @@
 <p><strong>Estado:</strong> @Model.Estado</p>
 
 <a asp-action="Index" class="btn btn-secondary">Volver</a>
+@if (User.IsInRole(Roles.Administrador))
+{
+    <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-danger">Eliminar</a>
+}

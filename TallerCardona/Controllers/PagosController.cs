@@ -82,9 +82,20 @@ public class PagosController : Controller
         }
     }
 
-    [HttpPost]
-    [ValidateAntiForgeryToken]
+    // GET: /Pagos/Delete/1  (confirmación; solo Administrador)
+    [Authorize(Policy = "SoloAdministrador")]
     public IActionResult Delete(int id)
+    {
+        var pago = _pagos.ObtenerPorId(id);
+        if (pago is null) return NotFound();
+        return View(pago);
+    }
+
+    // POST: /Pagos/Delete/1  (solo Administrador)
+    [HttpPost, ActionName("Delete")]
+    [ValidateAntiForgeryToken]
+    [Authorize(Policy = "SoloAdministrador")]
+    public IActionResult DeleteConfirmed(int id)
     {
         var pago = _pagos.ObtenerPorId(id);
         if (pago is null) return NotFound();

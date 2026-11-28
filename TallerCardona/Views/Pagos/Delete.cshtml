@@ -1,0 +1,18 @@
+@model TallerCardona.Models.Pago
+@{
+    ViewData["Title"] = "Eliminar pago";
+}
+<h2>Eliminar pago</h2>
+
+<div class="alert alert-warning">¿Seguro que desea eliminar este pago? Esta acción no se puede deshacer.</div>
+
+<p><strong>ID:</strong> @Model.Id</p>
+<p><strong>Orden de Trabajo:</strong> @Model.OrdenTrabajoId</p>
+<p><strong>Monto:</strong> @Model.Monto.ToString("C")</p>
+<p><strong>Fecha:</strong> @Model.Fecha.ToString("dd/MM/yyyy")</p>
+<p><strong>Método:</strong> @Model.MetodoPago</p>
+
+<form asp-action="Delete" asp-route-id="@Model.Id" method="post" class="d-inline">
+    <button type="submit" class="btn btn-danger">Eliminar</button>
+</form>
+<a asp-action="Index" class="btn btn-secondary">Cancelar</a>
