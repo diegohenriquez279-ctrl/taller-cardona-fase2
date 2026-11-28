@@ -1,0 +1,14 @@
+@model TallerCardona.Models.Pago
+@{
+    ViewData["Title"] = "Detalle del Pago";
+}
+<h2>Detalle del Pago</h2>
+
+<p><strong>ID:</strong> @Model.Id</p>
+<p><strong>Orden de Trabajo:</strong> @Model.OrdenTrabajoId</p>
+<p><strong>Monto:</strong> @Model.Monto.ToString("C")</p>
+<p><strong>Fecha:</strong> @Model.Fecha.ToString("dd/MM/yyyy")</p>
+<p><strong>Método:</strong> @Model.MetodoPago</p>
+<p><strong>Estado:</strong> @Model.Estado</p>
+
+<a asp-action="Index" class="btn btn-secondary">Volver</a>
