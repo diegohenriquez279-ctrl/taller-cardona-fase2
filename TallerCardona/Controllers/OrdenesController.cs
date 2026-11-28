@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using TallerCardona.Models;
@@ -7,6 +8,9 @@ namespace TallerCardona.Controllers;
 
 // Controlador de órdenes: recibe lo que manda la vista, llama al servicio
 // y decide qué vista mostrar. Ya no habla directo con el repositorio.
+// Las órdenes las usa todo el taller (Administrador, Recepción y Mecánico);
+// eliminar queda solo para el Administrador.
+[Authorize(Policy = "PersonalTaller")]
 public class OrdenesController : Controller
 {
     private readonly IOrdenTrabajoService _ordenService;
@@ -132,7 +136,36 @@ public class OrdenesController : Controller
         return RedirectToAction(nameof(Tablero));
     }
 
+    // POST: /Ordenes/CambiarEstadoAjax   (lo llama wwwroot/js/tablero.js con fetch)
+    // Cuerpo JSON: { "id": 5, "estado": "EnDiagnostico" }
+    // Responde JSON con el mensaje y el conteo por estado, para que el tablero
+    // mueva la tarjeta y actualice los números SIN recargar la página.
+    // El token antiforgery llega en el encabezado RequestVerificationToken (filtro global).
+    [HttpPost]
+    public IActionResult CambiarEstadoAjax([FromBody] CambioEstadoTablero datos)
+    {
+        var resultado = _ordenService.CambiarEstado(datos.Id, datos.Estado);
+        var respuesta = new
+        {
+            exito = resultado.Exito,
+            mensaje = resultado.Mensaje,
+            conteo = _ordenService.ConteoPorEstado()
+                .Select(c => new { estado = c.Estado.ToString(), cantidad = c.Cantidad })
+        };
+        return resultado.Exito ? Json(respuesta) : BadRequest(respuesta);
+    }
+
+    // Datos que manda el tablero al cambiar el estado de una tarjeta.
+    public class CambioEstadoTablero
+    {
+        public int Id { get; set; }
+
+        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter))]
+        public EstadoOrden Estado { get; set; }
+    }
+
     // GET: /Ordenes/Delete/1
+    [Authorize(Policy = "SoloAdministrador")]
     public IActionResult Delete(int id)
     {
         var orden = _ordenService.ObtenerPorId(id);
@@ -143,6 +176,7 @@ public class OrdenesController : Controller
     // POST: /Ordenes/Delete/1
     [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
+    [Authorize(Policy = "SoloAdministrador")]
     public IActionResult DeleteConfirmed(int id)
     {
         var resultado = _ordenService.Eliminar(id);

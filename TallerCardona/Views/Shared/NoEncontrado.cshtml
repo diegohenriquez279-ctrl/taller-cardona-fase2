@@ -1,0 +1,23 @@
+@{
+    ViewData["Title"] = "Página no encontrada";
+    var codigo = ViewData["Codigo"] as int? ?? 404;
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6 text-center mt-4">
+        @if (codigo == 404)
+        {
+            <h1 class="h3">No encontramos lo que busca</h1>
+            <p class="text-muted">
+                La página o el registro no existe, o pudo haber sido eliminado.
+                Revise la dirección o vuelva al inicio.
+            </p>
+        }
+        else
+        {
+            <h1 class="h3">No se pudo completar la solicitud</h1>
+            <p class="text-muted">La solicitud no se pudo procesar (código @codigo).</p>
+        }
+        <a asp-controller="Home" asp-action="Index" class="btn btn-primary">Volver al inicio</a>
+    </div>
+</div>

@@ -12,11 +12,17 @@ public class OrdenTrabajoService : IOrdenTrabajoService
 {
     private readonly IOrdenTrabajoRepositorio _repositorio;
     private readonly IUnidadDeTrabajo _unidadDeTrabajo;
+    private readonly ILogger<OrdenTrabajoService> _logger;
 
-    public OrdenTrabajoService(IOrdenTrabajoRepositorio repositorio, IUnidadDeTrabajo unidadDeTrabajo)
+    // ILogger: se pide en el constructor y ASP.NET lo entrega (va a consola y a Logs/).
+    public OrdenTrabajoService(
+        IOrdenTrabajoRepositorio repositorio,
+        IUnidadDeTrabajo unidadDeTrabajo,
+        ILogger<OrdenTrabajoService> logger)
     {
         _repositorio = repositorio;
         _unidadDeTrabajo = unidadDeTrabajo;
+        _logger = logger;
     }
 
     public List<OrdenTrabajo> Listar(string? busqueda = null, EstadoOrden? estado = null,
@@ -70,11 +76,17 @@ public class OrdenTrabajoService : IOrdenTrabajoService
     {
         // Regla: una orden necesita un vehículo que exista
         if (!_repositorio.ExisteVehiculo(orden.VehiculoId))
+        {
+            _logger.LogWarning("Crear orden rechazado: el vehículo {VehiculoId} no existe", orden.VehiculoId);
             return Resultado.Error("Seleccione un vehículo registrado.");
+        }
 
         var error = ArmarDetalles(null, servicioIds, repuestoIds, out var servicios, out var repuestos);
         if (error is not null)
+        {
+            _logger.LogWarning("Crear orden rechazado: {Motivo}", error);
             return Resultado.Error(error);
+        }
 
         // Toda orden nueva empieza en "Recibido" y todavía no tiene fecha de entrega
         orden.Estado = EstadoOrden.Recibido;
@@ -86,10 +98,13 @@ public class OrdenTrabajoService : IOrdenTrabajoService
         {
             _repositorio.Agregar(orden);
             _unidadDeTrabajo.Guardar();
+            _logger.LogInformation("Orden creada: Id {Id}, vehículo {VehiculoId}, {Servicios} servicio(s) y {Repuestos} repuesto(s)",
+                orden.Id, orden.VehiculoId, servicios.Count, repuestos.Count);
             return Resultado.Ok($"Orden #{orden.Id} registrada correctamente.");
         }
-        catch (DbUpdateException)
+        catch (DbUpdateException ex)
         {
+            _logger.LogError(ex, "Error de base de datos al crear una orden para el vehículo {VehiculoId}", orden.VehiculoId);
             return Resultado.Error("No se pudo guardar la orden. Intente de nuevo.");
         }
     }
@@ -118,10 +133,12 @@ public class OrdenTrabajoService : IOrdenTrabajoService
             _repositorio.Actualizar(orden);
             _repositorio.ReemplazarDetalles(existente, servicios, repuestos);
             _unidadDeTrabajo.Guardar();
+            _logger.LogInformation("Orden actualizada: Id {Id}, estado {Estado}", orden.Id, orden.Estado);
             return Resultado.Ok("Orden de trabajo actualizada correctamente.");
         }
-        catch (DbUpdateException)
+        catch (DbUpdateException ex)
         {
+            _logger.LogError(ex, "Error de base de datos al actualizar la orden {Id}", orden.Id);
             return Resultado.Error("No se pudo actualizar la orden. Intente de nuevo.");
         }
     }
@@ -134,20 +151,26 @@ public class OrdenTrabajoService : IOrdenTrabajoService
 
         var errorEstado = ValidarCambioDeEstado(orden.Estado, nuevoEstado);
         if (errorEstado is not null)
+        {
+            _logger.LogWarning("Cambio de estado rechazado en la orden {Id}: de {Actual} a {Nuevo}", id, orden.Estado, nuevoEstado);
             return Resultado.Error(errorEstado);
+        }
 
         if (orden.Estado == nuevoEstado)
             return Resultado.Ok($"La orden #{id} ya está en «{nuevoEstado.Nombre()}».");
 
         try
         {
+            var anterior = orden.Estado;
             orden.Estado = nuevoEstado;
             orden.FechaEntrega = CalcularFechaEntrega(nuevoEstado, orden.FechaEntrega);
             _unidadDeTrabajo.Guardar();
+            _logger.LogInformation("Orden {Id} cambió de estado: {Anterior} -> {Nuevo}", id, anterior, nuevoEstado);
             return Resultado.Ok($"La orden #{id} pasó a «{nuevoEstado.Nombre()}».");
         }
-        catch (DbUpdateException)
+        catch (DbUpdateException ex)
         {
+            _logger.LogError(ex, "Error de base de datos al cambiar el estado de la orden {Id}", id);
             return Resultado.Error("No se pudo cambiar el estado. Intente de nuevo.");
         }
     }
@@ -160,19 +183,27 @@ public class OrdenTrabajoService : IOrdenTrabajoService
 
         // Regla: no se elimina una orden que ya tiene presupuesto o pagos
         if (orden.Presupuesto is not null)
+        {
+            _logger.LogWarning("Eliminar orden {Id} rechazado: tiene presupuesto", id);
             return Resultado.Error("No se puede eliminar: la orden ya tiene un presupuesto.");
+        }
 
         if (orden.Pagos.Any())
+        {
+            _logger.LogWarning("Eliminar orden {Id} rechazado: tiene {Cantidad} pago(s)", id, orden.Pagos.Count);
             return Resultado.Error("No se puede eliminar: la orden ya tiene pagos registrados.");
+        }
 
         try
         {
             _repositorio.Eliminar(id);
             _unidadDeTrabajo.Guardar();
+            _logger.LogInformation("Orden eliminada: Id {Id}", id);
             return Resultado.Ok($"Orden #{id} eliminada.");
         }
-        catch (DbUpdateException)
+        catch (DbUpdateException ex)
         {
+            _logger.LogError(ex, "Error de base de datos al eliminar la orden {Id}", id);
             return Resultado.Error("No se pudo eliminar la orden. Intente de nuevo.");
         }
     }

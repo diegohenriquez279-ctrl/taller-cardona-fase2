@@ -1,10 +1,13 @@
 
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - TallerCardona</title>
+    @* Token antiforgery para los fetch POST del equipo: usar window.tokenAntiforgery() (ver site.js) *@
+    <meta name="token-antiforgery" content="@Antiforgery.GetAndStoreTokens(Context).RequestToken" />
     <script type="importmap"></script>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
@@ -63,6 +66,31 @@
                             <a class="nav-link text-dark"
                                asp-controller="Home" asp-action="Privacy">Privacidad</a>
                         </li>
+                    </ul>
+
+                    @* Zona del usuario (derecha): correo y rol, o enlace para iniciar sesión *@
+                    <ul class="navbar-nav">
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            var rolActual = Roles.Todos.FirstOrDefault(r => User.IsInRole(r)) ?? "Sin rol";
+                            <li class="nav-item d-flex align-items-center me-2">
+                                <span class="navbar-text small">
+                                    @User.Identity.Name
+                                    <span class="badge bg-secondary ms-1">@rolActual</span>
+                                </span>
+                            </li>
+                            <li class="nav-item">
+                                <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">Cerrar sesión</button>
+                                </form>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item">
+                                <a class="btn btn-sm btn-primary" asp-controller="Account" asp-action="Login">Iniciar sesión</a>
+                            </li>
+                        }
                     </ul>
                 </div>
             </div>

@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using TallerCardona.Models;
 
@@ -6,7 +8,11 @@ namespace TallerCardona.Data;
 // Contexto de Entity Framework: representa la base TallerCardonaDB.
 // Cada DbSet es una tabla. Las relaciones y reglas de las columnas
 // se configuran en OnModelCreating (Fluent API).
-public class AppDbContext : DbContext
+//
+// Fase 4: hereda de IdentityDbContext<IdentityUser> para que la misma base
+// guarde también los usuarios y roles del sistema (tablas AspNetUsers,
+// AspNetRoles, AspNetUserRoles, etc.). Todo lo demás sigue igual.
+public class AppDbContext : IdentityDbContext<IdentityUser>
 {
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
     {
@@ -24,6 +30,8 @@ public class AppDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        // IMPORTANTE: debe ir primero. Configura las tablas de Identity;
+        // si se quita o se mueve, la migración de usuarios y roles falla.
         base.OnModelCreating(modelBuilder);
 
         // ---------- Clientes ----------
