@@ -11,31 +11,26 @@ public class PagosController : Controller
 {
     private readonly IPagoService _pagos;
     private readonly IOrdenTrabajoRepositorio _ordenes;
-    private readonly IPresupuestoRepositorio _presupuestos;
 
-    public PagosController(
-        IPagoService pagos,
-        IOrdenTrabajoRepositorio ordenes,
-        IPresupuestoRepositorio presupuestos)
+    public PagosController(IPagoService pagos, IOrdenTrabajoRepositorio ordenes)
     {
         _pagos = pagos;
         _ordenes = ordenes;
-        _presupuestos = presupuestos;
     }
 
-    public IActionResult Index()
+    public async Task<IActionResult> Index()
     {
-        return View(_pagos.Listar());
+        return View(await _pagos.ListarAsync());
     }
 
-    public IActionResult Details(int id)
+    public async Task<IActionResult> Details(int id)
     {
-        var pago = _pagos.ObtenerPorId(id);
+        var pago = await _pagos.ObtenerPorIdAsync(id);
         if (pago is null) return NotFound();
         return View(pago);
     }
 
-    public IActionResult Create(int ordenTrabajoId)
+    public async Task<IActionResult> Create(int ordenTrabajoId)
     {
         var orden = _ordenes.ObtenerPorId(ordenTrabajoId);
         if (orden is null)
@@ -44,8 +39,7 @@ public class PagosController : Controller
             return RedirectToAction("Index", "Ordenes");
         }
 
-        var presupuesto = _presupuestos.Listar()
-            .FirstOrDefault(p => p.OrdenTrabajoId == orden.Id);
+        var presupuesto = _pagos.ObtenerPresupuestoDeOrden(orden.Id);
 
         if (presupuesto is null || presupuesto.Estado != EstadoPresupuesto.Autorizado)
         {
@@ -53,9 +47,7 @@ public class PagosController : Controller
             return RedirectToAction("Index", "Ordenes");
         }
 
-        var yaPagado = _pagos.Listar()
-            .Where(p => p.OrdenTrabajoId == orden.Id)
-            .Sum(p => p.Monto);
+        var yaPagado = (await _pagos.ListarPorOrdenAsync(orden.Id)).Sum(p => p.Monto);
 
         ViewBag.Orden = orden;
         ViewBag.Presupuesto = presupuesto;
@@ -67,11 +59,11 @@ public class PagosController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public IActionResult Create(Pago pago)
+    public async Task<IActionResult> Create(Pago pago)
     {
         try
         {
-            _pagos.Registrar(pago);
+            await _pagos.RegistrarAsync(pago);
             TempData["Mensaje"] = "Pago registrado correctamente.";
             return RedirectToAction(nameof(Index));
         }
@@ -84,9 +76,9 @@ public class PagosController : Controller
 
     // GET: /Pagos/Delete/1  (confirmación; solo Administrador)
     [Authorize(Policy = "SoloAdministrador")]
-    public IActionResult Delete(int id)
+    public async Task<IActionResult> Delete(int id)
     {
-        var pago = _pagos.ObtenerPorId(id);
+        var pago = await _pagos.ObtenerPorIdAsync(id);
         if (pago is null) return NotFound();
         return View(pago);
     }
@@ -95,12 +87,10 @@ public class PagosController : Controller
     [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
     [Authorize(Policy = "SoloAdministrador")]
-    public IActionResult DeleteConfirmed(int id)
+    public async Task<IActionResult> DeleteConfirmed(int id)
     {
-        var pago = _pagos.ObtenerPorId(id);
-        if (pago is null) return NotFound();
+        if (!await _pagos.EliminarAsync(id, User.Identity?.Name)) return NotFound();
 
-        _pagos.Eliminar(id);
         TempData["Mensaje"] = "Pago eliminado.";
         return RedirectToAction(nameof(Index));
     }
