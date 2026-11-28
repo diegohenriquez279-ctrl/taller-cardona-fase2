@@ -32,7 +32,6 @@ Leyenda: ✅ hecho · ⚠️ parcial · ❌ falta
 | Fecha | Pendiente | Detalle | Responsable |
 |---|---|---|---|
 | 27/11/2026 | **Crear cuentas de usuario** | Al probar la app publicada desde un celular no había credenciales ni forma de crear una cuenta: en el login no existe la opción y solo están los 3 usuarios de prueba de `SeedIdentidad`. Propuesta: pantalla **solo para el Administrador** (política `SoloAdministrador`) para crear usuarios y asignarles rol (Administrador, Recepción o Mecánico), en vez de un registro abierto, porque es un sistema interno y cada cuenta necesita un rol. | Diego |
-| 27/11/2026 | **Republicar en IIS los cambios del cierre** | `dotnet publish` a `C:\inetpub\TallerCardona` y el reinicio del pool `TallerCardona` requieren PowerShell **como administrador** (ver `DESPLIEGUE.md`). Después, comprobar en http://localhost:8080 login, menú, Pagos y Swagger. | Diego |
 
 ---
 
@@ -59,6 +58,7 @@ Leyenda: ✅ hecho · ⚠️ parcial · ❌ falta
 | `/api/vehiculos` GET / POST / DELETE | ✅ | | |
 | `/api/ordenes/conteo-por-estado` con nombres | ✅ | | |
 | Entradas de Pagos en `Logs/taller-20261127.txt` | ✅ | | |
+| IIS republicado (pool detenido → `dotnet publish -c Release` → pool iniciado): login, menú, Pagos, Swagger y `/api/pagos` en http://localhost:8080 | ✅ | ✅ (DELETE 403) | 403 (correcto) |
 
 ## Lo que hizo Diego en el corte del 26/11
 
