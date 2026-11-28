@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TallerCardona.Models;
 using TallerCardona.Repositorios;
@@ -5,14 +6,15 @@ using TallerCardona.Services;
 
 namespace TallerCardona.Controllers;
 
+[Authorize(Policy = "AdminORecepcion")]
 public class PagosController : Controller
 {
-    private readonly IPagoRepositorio _pagos;
+    private readonly IPagoService _pagos;
     private readonly IOrdenTrabajoRepositorio _ordenes;
     private readonly IPresupuestoRepositorio _presupuestos;
 
     public PagosController(
-        IPagoRepositorio pagos,
+        IPagoService pagos,
         IOrdenTrabajoRepositorio ordenes,
         IPresupuestoRepositorio presupuestos)
     {
@@ -29,18 +31,13 @@ public class PagosController : Controller
     public IActionResult Details(int id)
     {
         var pago = _pagos.ObtenerPorId(id);
-
-        if (pago is null)
-            return NotFound();
-
+        if (pago is null) return NotFound();
         return View(pago);
     }
 
-   
     public IActionResult Create(int ordenTrabajoId)
     {
         var orden = _ordenes.ObtenerPorId(ordenTrabajoId);
-
         if (orden is null)
         {
             TempData["Error"] = "No se encontró la orden de trabajo.";
@@ -65,58 +62,24 @@ public class PagosController : Controller
         ViewBag.YaPagado = yaPagado;
         ViewBag.SaldoPendiente = presupuesto.TotalEstimado - yaPagado;
 
-        return View(new Pago
-        {
-            OrdenTrabajoId = orden.Id,
-            Fecha = DateTime.Now
-        });
+        return View(new Pago { OrdenTrabajoId = orden.Id, Fecha = DateTime.Now });
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
     public IActionResult Create(Pago pago)
     {
-        var orden = _ordenes.ObtenerPorId(pago.OrdenTrabajoId);
-
-        if (orden is null)
+        try
         {
-            TempData["Error"] = "No se encontró la orden de trabajo.";
-            return RedirectToAction("Index", "Ordenes");
+            _pagos.Registrar(pago);
+            TempData["Mensaje"] = "Pago registrado correctamente.";
+            return RedirectToAction(nameof(Index));
         }
-
-        var presupuesto = _presupuestos.Listar()
-            .FirstOrDefault(p => p.OrdenTrabajoId == orden.Id);
-
-        if (presupuesto is null || presupuesto.Estado != EstadoPresupuesto.Autorizado)
+        catch (InvalidOperationException ex)
         {
-            TempData["Error"] = "Solo se pueden registrar pagos de órdenes con presupuesto Autorizado.";
-            return RedirectToAction("Index", "Ordenes");
-        }
-
-       
-        if (pago.Monto <= 0)
-        {
-            TempData["Error"] = "El monto debe ser mayor que cero.";
+            TempData["Error"] = ex.Message;
             return RedirectToAction(nameof(Create), new { ordenTrabajoId = pago.OrdenTrabajoId });
         }
-
-        
-        var yaPagado = _pagos.Listar()
-            .Where(p => p.OrdenTrabajoId == orden.Id)
-            .Sum(p => p.Monto);
-
-        if (yaPagado + pago.Monto > presupuesto.TotalEstimado)
-        {
-            TempData["Error"] = $"No se puede registrar. Saldo pendiente: {presupuesto.TotalEstimado - yaPagado:C}.";
-            return RedirectToAction(nameof(Create), new { ordenTrabajoId = pago.OrdenTrabajoId });
-        }
-
-        pago.OrdenTrabajo = orden;
-        _pagos.Agregar(pago);
-
-        TempData["Mensaje"] = "Pago registrado correctamente.";
-
-        return RedirectToAction(nameof(Index));
     }
 
     [HttpPost]
@@ -124,14 +87,10 @@ public class PagosController : Controller
     public IActionResult Delete(int id)
     {
         var pago = _pagos.ObtenerPorId(id);
-
-        if (pago is null)
-            return NotFound();
+        if (pago is null) return NotFound();
 
         _pagos.Eliminar(id);
-
         TempData["Mensaje"] = "Pago eliminado.";
-
         return RedirectToAction(nameof(Index));
     }
 }
