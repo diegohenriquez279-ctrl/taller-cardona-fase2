@@ -176,8 +176,8 @@ builder.Services.AddSingleton<IRepuestoRepositorio, RepuestoRepositorioMemoria>(
 builder.Services.AddScoped<IPresupuestoService, PresupuestoService>();
 
 // ===== Módulo Pagos (Carlos) =====
-// TEMPORAL: versión en memoria. Carlos la reemplaza por PagoRepositorio y PagoService.
-builder.Services.AddSingleton<IPagoRepositorio, PagoRepositorioMemoria>();
+builder.Services.AddScoped<IPagoRepositorio, PagoRepositorio>();
+builder.Services.AddScoped<IPagoService, PagoService>();
 
 // ===== Swagger (documentación y pruebas de la API) =====
 // Disponible en /swagger, también en producción porque se usa en la demo.

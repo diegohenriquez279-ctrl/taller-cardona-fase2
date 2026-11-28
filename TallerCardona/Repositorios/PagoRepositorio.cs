@@ -26,4 +26,6 @@ public class PagoRepositorio : IPagoRepositorio
         var pago = _context.Pagos.Find(id);
         if (pago is not null) _context.Pagos.Remove(pago);
     }
+    public void GuardarCambios() => _context.SaveChanges();
 }
+

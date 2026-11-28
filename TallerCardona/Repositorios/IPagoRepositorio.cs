@@ -8,4 +8,5 @@ public interface IPagoRepositorio
     Pago? ObtenerPorId(int id);
     void Agregar(Pago pago);
     void Eliminar(int id);
+    void GuardarCambios();
 }
