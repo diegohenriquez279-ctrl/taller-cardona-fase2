@@ -39,7 +39,7 @@ La cookie **no sirve** para la API y el token **no sirve** para las páginas MVC
 | Política | Roles que pasan | Uso |
 |---|---|---|
 | `SoloAdministrador` | Administrador | Eliminar registros (clientes, vehículos, órdenes, pagos) |
-| `AdminORecepcion` | Administrador, Recepcion | Clientes, vehículos, presupuestos, pagos (listar, ver, registrar) |
+| `AdminORecepcion` | Administrador, Recepcion | Clientes, vehículos, presupuestos (generar, autorizar, rechazar), pagos (listar, ver, registrar) |
 | `PersonalTaller` | Administrador, Recepcion, Mecanico | Lo que usa todo el taller (por ejemplo, órdenes de trabajo) |
 
 Las mismas políticas sirven para MVC y para la API: la política solo pide el rol; si se usa cookie o token lo decide el controlador.
@@ -168,11 +168,38 @@ Respuesta de `/api/pagos/presupuesto/{presupuestoId}` (`PagosDePresupuestoDto`):
 }
 ```
 
-> El presupuesto se lee con `IPresupuestoRepositorio`, que hoy está **en memoria** (módulo Presupuestos, pendiente y sin cambios). Por eso solo hay pagos posibles para órdenes cuyo presupuesto se creó y autorizó en memoria, y se pierden al reiniciar la app o reciclar el pool.
+> El presupuesto se lee con `IPresupuestoRepositorio`, que desde el 27/11/2026 usa el repositorio EF de Andrea (SQL Server). Pagos y presupuestos se conservan al reiniciar la app o reciclar el pool.
 
 Bitácora (Serilog, `Logs/taller-AAAAMMDD.txt`): pago registrado (Information), pago rechazado por regla (Warning, con el motivo) y pago eliminado (Information, con el usuario).
 
-### 5.2 Estados como texto en la API
+### 5.2 Endpoints de Presupuestos
+
+Todos requieren token y la política `AdminORecepcion` (el mecánico recibe `403`). No hay DELETE: un presupuesto se rechaza, no se borra. Las reglas están en `Services/PresupuestoService.cs` y son las mismas que en MVC.
+
+| Método | Ruta | Qué hace | Respuestas |
+|---|---|---|---|
+| GET | `/api/presupuestos` | Lista los presupuestos (más reciente primero) | 200, 401, 403 |
+| GET | `/api/presupuestos/{id}` | Un presupuesto | 200, 404, 401, 403 |
+| POST | `/api/presupuestos/orden/{ordenId}` | Genera el presupuesto de la orden (total = servicios + repuestos) | 201 (con `Location`), 400, 401, 403 |
+| POST | `/api/presupuestos/{id}/autorizar` | Autoriza un presupuesto Pendiente | 200, 400, 404, 401, 403 |
+| POST | `/api/presupuestos/{id}/rechazar` | Rechaza un presupuesto Pendiente | 200, 400, 404, 401, 403 |
+
+Reglas (400 ProblemDetails con el mensaje en `detail`): la orden debe existir y tener servicios o repuestos; no puede tener ya un presupuesto Pendiente o Autorizado (si el anterior fue Rechazado se **regenera** el mismo registro, porque la base permite un presupuesto por orden); solo se autoriza o rechaza un presupuesto Pendiente.
+
+`PresupuestoDto`:
+
+```json
+{ "id": 5, "ordenTrabajoId": 5, "fecha": "2026-11-27T22:02:49", "totalEstimado": 25.00,
+  "estado": "Autorizado", "observaciones": null, "placa": "P234-567", "cliente": "Carlos Martínez" }
+```
+
+En MVC: botón **Generar presupuesto** en el detalle de la orden (solo Administrador y Recepción; visible si no hay presupuesto o si fue rechazado), Autorizar/Rechazar en `Presupuestos/Index` y `Details`, y el reporte por estado en `Presupuestos/Index` (JSON en `/Presupuestos/ReportePorEstado`).
+
+Bitácora (`ILogger<PresupuestoService>`): presupuesto generado/regenerado (Information: id, orden, total, usuario), autorizado o rechazado (Information, con usuario) y regla incumplida (Warning, con el motivo).
+
+**Persistencia:** `Program.cs` registra con `AddScoped` los repositorios EF de Andrea (`Models/Repositorios/PresupuestoRepositorio.cs`, `ServicioRepositorio.cs`, `RepuestoRepositorio.cs`). Los `*RepositorioMemoria` siguen en el proyecto, comentados como “ya no se registra”.
+
+### 5.3 Estados como texto en la API
 
 `Program.cs` agrega `JsonStringEnumConverter` en `AddControllersWithViews().AddJsonOptions(...)`, así que **todos los enums** viajan como texto en el JSON (API y `Json()` de MVC). Ejemplo de `GET /api/ordenes/conteo-por-estado`:
 
@@ -243,9 +270,9 @@ La API de Vehículos ya está implementada en `Controllers/Api/VehiculosApiContr
 
 Los endpoints y ejemplos de cuerpos están en [`VEHICULOS_API.md`](VEHICULOS_API.md). **Vehículos ya está integrado en `main`** y se verificó el 27/11/2026: búsqueda en vivo, CRUD en MVC y GET/POST/DELETE por API con token.
 
-### 7.2.1 Pendiente: Presupuestos
+### 7.2.1 Presupuestos
 
-Presupuestos y catálogo quedan **pendientes, sin cambios** en este cierre (repositorio en memoria, sin API). Lo decide el equipo aparte.
+Presupuestos ya está persistido en SQL Server y tiene API (ver §5.2). La base es el repositorio EF de Andrea.
 
 ### 7.3 Registrar en el log
 
@@ -294,6 +321,8 @@ Para una búsqueda en vivo (GET), ver el ejemplo completo en `Views/Clientes/Ind
 | `Controllers/Api/ClientesApiController.cs` | **Ejemplo** de API completa |
 | `Controllers/Api/PagosApiController.cs` | API de Pagos (async, 400 con mensaje de la regla) |
 | `Models/Dtos/PagoDto.cs` | `PagoDto`, `PagoCrearDto`, `PagosDePresupuestoDto` |
+| `Controllers/Api/PresupuestosApiController.cs` | API de Presupuestos |
+| `Models/Repositorios/PresupuestoRepositorio.cs` | Repositorio EF de presupuestos (Andrea) |
 | `Models/Dtos/ClienteDto.cs` | **Ejemplo** de DTO |
 | `Services/TokenService.cs` | Genera el token JWT |
 | `Middleware/ManejoErroresMiddleware.cs` | Errores no controlados |
