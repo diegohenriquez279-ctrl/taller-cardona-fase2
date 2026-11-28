@@ -21,9 +21,15 @@
     <div class="alert alert-warning">@error</div>
 }
 
-<form method="get" asp-action="Index" class="row g-2 mb-3">
+<form method="get" asp-action="Index" class="row g-2 mb-3" id="formBusquedaVehiculos">
     <div class="col-sm-8 col-md-6">
         <input type="text" name="busqueda" value="@busqueda" class="form-control"
+               id="txtBusquedaVehiculos" autocomplete="off"
+               data-url-buscar="@Url.Action("Buscar", "Vehiculos")"
+               data-url-details="@Url.Action("Details", "Vehiculos", new { id = "__id__" })"
+               data-url-edit="@Url.Action("Edit", "Vehiculos", new { id = "__id__" })"
+               data-url-delete="@Url.Action("Delete", "Vehiculos", new { id = "__id__" })"
+               data-puede-eliminar="@(User.IsInRole(Roles.Administrador) ? "true" : "false")"
                placeholder="Buscar por placa, marca, modelo o cliente" />
     </div>
     <div class="col-auto">
@@ -32,20 +38,16 @@
     </div>
 </form>
 
-@if (!Model.Any())
-{
-    <p class="text-muted">No se encontraron vehículos.</p>
-}
-else
-{
-    <div class="table-responsive">
+<p class="text-muted @(Model.Any() ? "d-none" : "")" id="sinResultadosVehiculos">No se encontraron vehículos.</p>
+
+<div class="table-responsive @(Model.Any() ? "" : "d-none")" id="contenedorTablaVehiculos">
         <table class="table table-hover align-middle">
             <thead>
                 <tr>
                     <th>Placa</th><th>Vehículo</th><th>Año</th><th>Cliente</th><th>Kilometraje</th><th class="text-end">Acciones</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody id="cuerpoVehiculos">
                 @foreach (var vehiculo in Model)
                 {
                     <tr>
@@ -57,11 +59,17 @@ else
                         <td class="text-end text-nowrap">
                             <a asp-action="Details" asp-route-id="@vehiculo.Id" class="btn btn-sm btn-outline-secondary">Ver historial</a>
                             <a asp-action="Edit" asp-route-id="@vehiculo.Id" class="btn btn-sm btn-outline-primary">Editar</a>
-                            <a asp-action="Delete" asp-route-id="@vehiculo.Id" class="btn btn-sm btn-outline-danger">Eliminar</a>
+                            @if (User.IsInRole(Roles.Administrador))
+                            {
+                                <a asp-action="Delete" asp-route-id="@vehiculo.Id" class="btn btn-sm btn-outline-danger">Eliminar</a>
+                            }
                         </td>
                     </tr>
                 }
             </tbody>
         </table>
     </div>
+
+@section Scripts {
+    <script src="~/js/vehiculos.js" asp-append-version="true"></script>
 }

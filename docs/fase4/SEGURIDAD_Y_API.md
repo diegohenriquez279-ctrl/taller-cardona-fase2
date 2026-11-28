@@ -192,33 +192,11 @@ Para ocultar un botón según el rol en una vista:
 }
 ```
 
-### 7.2 Crear su API
+### 7.2 API de Vehículos
 
-1. **DTO**: copiar `Models/Dtos/ClienteDto.cs` → `VehiculoDto.cs`. Poner sus propiedades con validaciones y los métodos `DesdeEntidad(...)` y `AEntidad(...)`. Nunca devolver la entidad directamente (las relaciones hacen ciclos al convertir a JSON).
-2. **Controlador**: copiar `Controllers/Api/ClientesApiController.cs` → `VehiculosApiController.cs` y cambiar:
-   - `[Route("api/vehiculos")]`
-   - `[Authorize(Policy = "...")]`
-   - el servicio (`IVehiculoService`) y el DTO.
-3. **Heredar de `ApiControllerBase`** (ya trae JWT, `[ApiController]` y sin antiforgery):
+La API de Vehículos ya está implementada en `Controllers/Api/VehiculosApiController.cs`, con su DTO en `Models/Dtos/VehiculoDto.cs`. Usa `IVehiculoService` para compartir las reglas de negocio de las pantallas MVC y hereda de `ApiControllerBase` para exigir JWT.
 
-```csharp
-[Route("api/vehiculos")]
-[Authorize(Policy = "AdminORecepcion")]
-public class VehiculosApiController : ApiControllerBase
-{
-    private readonly IVehiculoService _servicio;
-    public VehiculosApiController(IVehiculoService servicio) => _servicio = servicio;
-
-    /// <summary>Lista los vehículos.</summary>
-    [HttpGet]
-    [ProducesResponseType(typeof(List<VehiculoDto>), StatusCodes.Status200OK)]
-    public ActionResult<List<VehiculoDto>> Listar() =>
-        Ok(_servicio.Listar().Select(VehiculoDto.DesdeEntidad).ToList());
-}
-```
-
-4. Usar siempre el **servicio**, no el repositorio, para que la API aplique las mismas reglas que las páginas.
-5. Los comentarios `///` aparecen solos en Swagger.
+Los endpoints y ejemplos de cuerpos están en [`VEHICULOS_API.md`](VEHICULOS_API.md). Falta ejecutar las pruebas en Swagger y guardar capturas antes de marcar esta parte como verificada.
 
 ### 7.3 Registrar en el log
 
