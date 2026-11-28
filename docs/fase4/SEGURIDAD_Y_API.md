@@ -38,8 +38,8 @@ La cookie **no sirve** para la API y el token **no sirve** para las páginas MVC
 
 | Política | Roles que pasan | Uso |
 |---|---|---|
-| `SoloAdministrador` | Administrador | Eliminar registros |
-| `AdminORecepcion` | Administrador, Recepcion | Clientes, vehículos, presupuestos, pagos |
+| `SoloAdministrador` | Administrador | Eliminar registros (clientes, vehículos, órdenes, pagos) |
+| `AdminORecepcion` | Administrador, Recepcion | Clientes, vehículos, presupuestos, pagos (listar, ver, registrar) |
 | `PersonalTaller` | Administrador, Recepcion, Mecanico | Lo que usa todo el taller (por ejemplo, órdenes de trabajo) |
 
 Las mismas políticas sirven para MVC y para la API: la política solo pide el rol; si se usa cookie o token lo decide el controlador.
@@ -138,6 +138,51 @@ Datos de un cliente (`ClienteDto`):
 - `400` por regla de negocio (teléfono repetido, cliente con vehículos) trae el mensaje en `detail`.
 - `404` trae `detail: "No existe un cliente con id X."`.
 
+### 5.1 Endpoints de Pagos
+
+Todos requieren token. Rol mínimo: Administrador o Recepcion. **Eliminar pagos es solo del Administrador** (también en MVC: `Pagos/Delete` GET y POST tienen `SoloAdministrador` y el botón Eliminar solo lo ve ese rol). Mecánico no tiene acceso a Pagos.
+
+| Método | Ruta | Rol | Qué hace | Respuestas |
+|---|---|---|---|---|
+| GET | `/api/pagos` | Admin / Recepción | Lista todos los pagos | 200, 401, 403 |
+| GET | `/api/pagos/{id}` | Admin / Recepción | Un pago | 200, 404, 401, 403 |
+| GET | `/api/pagos/presupuesto/{presupuestoId}` | Admin / Recepción | Pagos de la orden del presupuesto, total pagado y saldo | 200, 404, 401, 403 |
+| POST | `/api/pagos` | Admin / Recepción | Registra un pago | 201 (con `Location`), 400, 401, 403 |
+| DELETE | `/api/pagos/{id}` | Administrador | Elimina un pago | 204, 404, 401, 403 |
+
+Cuerpo para registrar (`PagoCrearDto`; la fecha y el estado los pone el servidor):
+
+```json
+{ "ordenTrabajoId": 4, "monto": 25.00, "metodoPago": "Efectivo" }
+```
+
+Reglas (las mismas que en la pantalla MVC, en `Services/PagoService.cs`): monto mayor que cero, la orden debe tener presupuesto **Autorizado** y el monto no puede superar el saldo pendiente. Si una regla falla, la API responde `400` ProblemDetails con el mensaje en `detail`, por ejemplo `"El monto supera el saldo pendiente de $5.00."`.
+
+Respuesta de `/api/pagos/presupuesto/{presupuestoId}` (`PagosDePresupuestoDto`):
+
+```json
+{
+  "presupuestoId": 1, "ordenTrabajoId": 4, "estadoPresupuesto": "Autorizado",
+  "totalEstimado": 15.00, "totalPagado": 10.00, "saldo": 5.00,
+  "pagos": [ { "id": 4, "ordenTrabajoId": 4, "fecha": "2026-11-27T21:31:03", "monto": 10.00, "metodoPago": "Efectivo", "estado": "Registrado" } ]
+}
+```
+
+> El presupuesto se lee con `IPresupuestoRepositorio`, que hoy está **en memoria** (módulo Presupuestos, pendiente y sin cambios). Por eso solo hay pagos posibles para órdenes cuyo presupuesto se creó y autorizó en memoria, y se pierden al reiniciar la app o reciclar el pool.
+
+Bitácora (Serilog, `Logs/taller-AAAAMMDD.txt`): pago registrado (Information), pago rechazado por regla (Warning, con el motivo) y pago eliminado (Information, con el usuario).
+
+### 5.2 Estados como texto en la API
+
+`Program.cs` agrega `JsonStringEnumConverter` en `AddControllersWithViews().AddJsonOptions(...)`, así que **todos los enums** viajan como texto en el JSON (API y `Json()` de MVC). Ejemplo de `GET /api/ordenes/conteo-por-estado`:
+
+```json
+[ { "estado": "Recibido", "cantidad": 0 }, { "estado": "EnDiagnostico", "cantidad": 2 }, { "estado": "EnReparacion", "cantidad": 1 },
+  { "estado": "ListoParaEntrega", "cantidad": 0 }, { "estado": "Entregado", "cantidad": 2 } ]
+```
+
+Lo mismo pasa con `metodoPago` (`"Efectivo"`, `"Tarjeta"`, `"Transferencia"`) y `estadoPresupuesto`. `tablero.js`, `clientes.js` y `vehiculos.js` ya trabajaban con nombres; no hubo que cambiarlos.
+
 ---
 
 ## 6. Manejo de errores y logs
@@ -196,7 +241,11 @@ Para ocultar un botón según el rol en una vista:
 
 La API de Vehículos ya está implementada en `Controllers/Api/VehiculosApiController.cs`, con su DTO en `Models/Dtos/VehiculoDto.cs`. Usa `IVehiculoService` para compartir las reglas de negocio de las pantallas MVC y hereda de `ApiControllerBase` para exigir JWT.
 
-Los endpoints y ejemplos de cuerpos están en [`VEHICULOS_API.md`](VEHICULOS_API.md). Falta ejecutar las pruebas en Swagger y guardar capturas antes de marcar esta parte como verificada.
+Los endpoints y ejemplos de cuerpos están en [`VEHICULOS_API.md`](VEHICULOS_API.md). **Vehículos ya está integrado en `main`** y se verificó el 27/11/2026: búsqueda en vivo, CRUD en MVC y GET/POST/DELETE por API con token.
+
+### 7.2.1 Pendiente: Presupuestos
+
+Presupuestos y catálogo quedan **pendientes, sin cambios** en este cierre (repositorio en memoria, sin API). Lo decide el equipo aparte.
 
 ### 7.3 Registrar en el log
 
@@ -243,6 +292,8 @@ Para una búsqueda en vivo (GET), ver el ejemplo completo en `Views/Clientes/Ind
 | `Controllers/Api/ApiControllerBase.cs` | Base de todas las APIs |
 | `Controllers/Api/AuthApiController.cs` | Login de la API (token) |
 | `Controllers/Api/ClientesApiController.cs` | **Ejemplo** de API completa |
+| `Controllers/Api/PagosApiController.cs` | API de Pagos (async, 400 con mensaje de la regla) |
+| `Models/Dtos/PagoDto.cs` | `PagoDto`, `PagoCrearDto`, `PagosDePresupuestoDto` |
 | `Models/Dtos/ClienteDto.cs` | **Ejemplo** de DTO |
 | `Services/TokenService.cs` | Genera el token JWT |
 | `Middleware/ManejoErroresMiddleware.cs` | Errores no controlados |
