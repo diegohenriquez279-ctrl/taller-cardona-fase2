@@ -11,6 +11,15 @@
 <div class="container mt-4">
     <h1 class="mb-3">Detalle del presupuesto</h1>
 
+    @if (TempData["Mensaje"] is string mensaje)
+    {
+        <div class="alert alert-success">@mensaje</div>
+    }
+    @if (TempData["Error"] is string error)
+    {
+        <div class="alert alert-danger">@error</div>
+    }
+
     <div class="card mb-4">
         <div class="card-header">
             Presupuesto N.º @Model.Id
@@ -176,6 +185,23 @@
             </div>
         </div>
     </div>
+
+    @* Autorizar / Rechazar: la vista solo la abren Administrador y Recepción (política AdminORecepcion). *@
+    @if (Model.Estado == TallerCardona.Models.EstadoPresupuesto.Pendiente)
+    {
+        <form asp-action="Autorizar" asp-route-id="@Model.Id" method="post" class="d-inline">
+            <input type="hidden" name="volverA" value="Details" />
+            <button type="submit" class="btn btn-success">Autorizar</button>
+        </form>
+        <form asp-action="Rechazar" asp-route-id="@Model.Id" method="post" class="d-inline">
+            <input type="hidden" name="volverA" value="Details" />
+            <button type="submit" class="btn btn-danger">Rechazar</button>
+        </form>
+    }
+    else if (Model.Estado == TallerCardona.Models.EstadoPresupuesto.Autorizado)
+    {
+        <a asp-controller="Pagos" asp-action="Create" asp-route-ordenTrabajoId="@Model.OrdenTrabajoId" class="btn btn-warning">Registrar pago</a>
+    }
 
     <a asp-action="Index" class="btn btn-secondary">
         Volver al listado

@@ -31,6 +31,25 @@
         <div class="alert alert-danger">@error</div>
     }
 
+    @* Reporte por estado (LINQ GroupBy en SQL Server, datos reales de la base) *@
+    @{ var reporte = ViewData["Reporte"] as List<TallerCardona.Models.Reportes.PresupuestosPorEstado> ?? new(); }
+    <div class="row g-3 mb-3">
+        @foreach (var estado in Enum.GetValues<EstadoPresupuesto>())
+        {
+            var fila = reporte.FirstOrDefault(r => r.Estado == estado);
+            <div class="col-sm-4">
+                <div class="card h-100">
+                    <div class="card-body py-2">
+                        <div class="text-muted small">@estado</div>
+                        <div class="fs-4 fw-bold">@(fila?.Cantidad ?? 0)</div>
+                        <div class="small">@((fila?.MontoTotal ?? 0m).ToString("C2"))</div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+    <p class="small"><a asp-action="ReportePorEstado">Ver reporte por estado (JSON)</a></p>
+
     <div class="table-responsive">
         <table class="table table-striped table-bordered align-middle">
             <thead class="table-dark">
